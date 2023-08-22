@@ -6,27 +6,22 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
-import android.widget.TextView;
-
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-
-import com.tencent.qcloud.tuicore.util.ScreenUtil;
+import com.tencent.qcloud.tuikit.timcommon.component.swipe.RecyclerSwipeAdapter;
+import com.tencent.qcloud.tuikit.timcommon.component.swipe.SimpleSwipeListener;
+import com.tencent.qcloud.tuikit.timcommon.component.swipe.SwipeLayout;
+import com.tencent.qcloud.tuikit.timcommon.util.ScreenUtil;
 import com.tencent.qcloud.tuikit.tuiconversation.R;
 import com.tencent.qcloud.tuikit.tuiconversation.TUIConversationService;
 import com.tencent.qcloud.tuikit.tuiconversation.bean.ConversationInfo;
-import com.tencent.qcloud.tuikit.tuiconversation.minimalistui.interfaces.OnConversationAdapterListener;
 import com.tencent.qcloud.tuikit.tuiconversation.interfaces.IConversationListAdapter;
-import com.tencent.qcloud.tuikit.tuiconversation.minimalistui.widget.swipe.RecyclerSwipeAdapter;
-import com.tencent.qcloud.tuikit.tuiconversation.minimalistui.widget.swipe.SimpleSwipeListener;
-import com.tencent.qcloud.tuikit.tuiconversation.minimalistui.widget.swipe.SwipeLayout;
-
+import com.tencent.qcloud.tuikit.tuiconversation.minimalistui.interfaces.OnConversationAdapterListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 public class ConversationListAdapter extends RecyclerSwipeAdapter<RecyclerView.ViewHolder> implements IConversationListAdapter {
-
     public static final int ITEM_TYPE_HEADER_HIDE = 101;
     public static final int ITEM_TYPE_FOOTER_LOADING = -99;
     public static final int HEADER_COUNT = 1;
@@ -42,7 +37,7 @@ public class ConversationListAdapter extends RecyclerSwipeAdapter<RecyclerView.V
     protected List<ConversationInfo> mDataSource = new ArrayList<>();
     private OnConversationAdapterListener mOnConversationAdapterListener;
 
-    //消息转发
+    // 消息转发
     private final HashMap<String, Boolean> mSelectedPositions = new HashMap<>();
     private boolean isShowMultiSelectCheckBox = false;
     private boolean isForwardFragment = false;
@@ -56,9 +51,8 @@ public class ConversationListAdapter extends RecyclerSwipeAdapter<RecyclerView.V
     private View hideView;
     // 展示折叠样式
     private boolean showFoldedStyle = true;
-    public ConversationListAdapter() {
 
-    }
+    public ConversationListAdapter() {}
 
     public int getCurrentPosition() {
         return currentPosition;
@@ -72,7 +66,7 @@ public class ConversationListAdapter extends RecyclerSwipeAdapter<RecyclerView.V
         isClick = click;
     }
 
-    public void setCurrentPosition(int currentPosition , boolean isClick) {
+    public void setCurrentPosition(int currentPosition, boolean isClick) {
         this.currentPosition = currentPosition;
         this.isClick = isClick;
     }
@@ -93,12 +87,12 @@ public class ConversationListAdapter extends RecyclerSwipeAdapter<RecyclerView.V
         this.showFoldedStyle = showFoldedStyle;
     }
 
-    //设置给定位置条目的选择状态
+    // 设置给定位置条目的选择状态
     public void setItemChecked(String conversationId, boolean isChecked) {
         mSelectedPositions.put(conversationId, isChecked);
     }
 
-    //根据位置判断条目是否选中
+    // 根据位置判断条目是否选中
     private boolean isItemChecked(String id) {
         if (mSelectedPositions.size() <= 0) {
             return false;
@@ -129,8 +123,8 @@ public class ConversationListAdapter extends RecyclerSwipeAdapter<RecyclerView.V
         return selectList;
     }
 
-    public void setSelectConversations(List<ConversationInfo> dataSource){
-        if(dataSource == null || dataSource.size() == 0){
+    public void setSelectConversations(List<ConversationInfo> dataSource) {
+        if (dataSource == null || dataSource.size() == 0) {
             mSelectedPositions.clear();
             notifyDataSetChanged();
             return;
@@ -138,8 +132,8 @@ public class ConversationListAdapter extends RecyclerSwipeAdapter<RecyclerView.V
 
         mSelectedPositions.clear();
         for (int i = 0; i < dataSource.size(); i++) {
-            for (int j =0; j<mDataSource.size(); j++){
-                if (TextUtils.equals(dataSource.get(i).getConversationId(), mDataSource.get(j).getConversationId())){
+            for (int j = 0; j < mDataSource.size(); j++) {
+                if (TextUtils.equals(dataSource.get(i).getConversationId(), mDataSource.get(j).getConversationId())) {
                     setItemChecked(mDataSource.get(j).getConversationId(), true);
                     notifyDataSetChanged();
                     break;
@@ -172,16 +166,17 @@ public class ConversationListAdapter extends RecyclerSwipeAdapter<RecyclerView.V
             view = inflater.inflate(R.layout.conversation_custom_adapter, parent, false);
             holder = new ConversationCustomHolder(view);
         } else if (viewType == ITEM_TYPE_FOOTER_LOADING) {
-            view = inflater.inflate(R.layout.loading_progress_bar, parent, false);
+            view = inflater.inflate(R.layout.conversation_loading_progress_bar, parent, false);
             return new FooterViewHolder(view);
-        } else if (viewType == ConversationInfo.TYPE_FORWAR_SELECT) {
-            view = inflater.inflate(R.layout.conversation_forward_select_adapter, parent, false);
-            return new ForwardSelectHolder(view);
-        }  else if (viewType == ConversationInfo.TYPE_RECENT_LABEL) {
-            view = inflater.inflate(R.layout.conversation_forward_label_adapter, parent, false);
+        } else if (viewType == ConversationInfo.TYPE_RECENT_LABEL) {
+            view = inflater.inflate(R.layout.conversation_minimalist_forward_label_adapter, parent, false);
             return new ForwardLabelHolder(view);
         } else {
-            view = inflater.inflate(R.layout.minimalistui_conversation_list_item_layout, parent, false);
+            if (isForwardFragment) {
+                view = inflater.inflate(R.layout.minimalistui_conversation_forward_list_item_layout, parent, false);
+            } else {
+                view = inflater.inflate(R.layout.minimalistui_conversation_list_item_layout, parent, false);
+            }
             holder = new ConversationCommonHolder(view);
             ((ConversationCommonHolder) holder).setForwardMode(isForwardFragment);
             ((ConversationCommonHolder) holder).setShowFoldedStyle(showFoldedStyle);
@@ -208,12 +203,6 @@ public class ConversationListAdapter extends RecyclerSwipeAdapter<RecyclerView.V
                 }
                 break;
             }
-            case ConversationInfo.TYPE_FORWAR_SELECT : {
-                ForwardSelectHolder selectHolder = (ForwardSelectHolder) holder;
-                selectHolder.refreshTitle(!isShowMultiSelectCheckBox);
-                setOnClickListener(holder, getItemViewType(position), conversationInfo);
-                break;
-            }
             default: {
                 if (baseHolder instanceof ConversationCommonHolder) {
                     ConversationCommonHolder viewHolder = (ConversationCommonHolder) baseHolder;
@@ -221,9 +210,7 @@ public class ConversationListAdapter extends RecyclerSwipeAdapter<RecyclerView.V
                     if (conversationInfo.isMarkFold()) {
                         viewHolder.swipeLayout.setOnDoubleClickListener(new SwipeLayout.DoubleClickListener() {
                             @Override
-                            public void onDoubleClick(SwipeLayout layout, boolean surface) {
-
-                            }
+                            public void onDoubleClick(SwipeLayout layout, boolean surface) {}
 
                             @Override
                             public void onClick() {
@@ -240,7 +227,6 @@ public class ConversationListAdapter extends RecyclerSwipeAdapter<RecyclerView.V
                             @Override
                             public void onClick(View view) {
                                 if (mOnConversationAdapterListener != null) {
-                                    mItemManger.removeShownLayouts(viewHolder.swipeLayout);
                                     mOnConversationAdapterListener.onMarkConversationHidden(view, conversationInfo);
                                 }
                                 mItemManger.closeAllSwipeItems();
@@ -277,11 +263,13 @@ public class ConversationListAdapter extends RecyclerSwipeAdapter<RecyclerView.V
                                 } else {
                                     if (isMarkUnread) {
                                         viewHolder.markReadTextView.setText(R.string.mark_read);
-                                        viewHolder.markReadView.setBackgroundColor(viewHolder.itemView.getResources().getColor(R.color.conversation_mark_swipe_bg));
+                                        viewHolder.markReadView.setBackgroundColor(
+                                            viewHolder.itemView.getResources().getColor(R.color.conversation_mark_swipe_bg));
                                         viewHolder.markReadIconView.setBackgroundResource(R.drawable.conversation_minimalist_message_status_send_all_read);
                                     } else {
                                         viewHolder.markReadTextView.setText(R.string.mark_unread);
-                                        viewHolder.markReadView.setBackgroundColor(viewHolder.itemView.getResources().getColor(R.color.conversation_mark_swipe_dark_bg));
+                                        viewHolder.markReadView.setBackgroundColor(
+                                            viewHolder.itemView.getResources().getColor(R.color.conversation_mark_swipe_dark_bg));
                                         viewHolder.markReadIconView.setBackgroundResource(R.drawable.conversation_minimalist_message_status_send_no_read);
                                     }
                                 }
@@ -289,9 +277,7 @@ public class ConversationListAdapter extends RecyclerSwipeAdapter<RecyclerView.V
                         });
                         viewHolder.swipeLayout.setOnDoubleClickListener(new SwipeLayout.DoubleClickListener() {
                             @Override
-                            public void onDoubleClick(SwipeLayout layout, boolean surface) {
-
-                            }
+                            public void onDoubleClick(SwipeLayout layout, boolean surface) {}
 
                             @Override
                             public void onClick() {
@@ -305,7 +291,8 @@ public class ConversationListAdapter extends RecyclerSwipeAdapter<RecyclerView.V
                             @Override
                             public void onClick(View view) {
                                 if (mOnConversationAdapterListener != null) {
-                                    boolean markRead = TUIConversationService.getAppContext().getString(R.string.mark_read).equals(viewHolder.markReadTextView.getText());
+                                    boolean markRead =
+                                        TUIConversationService.getAppContext().getString(R.string.mark_read).equals(viewHolder.markReadTextView.getText());
                                     mOnConversationAdapterListener.onMarkConversationUnread(view, conversationInfo, !markRead);
                                 }
                                 mItemManger.closeAllSwipeItems();
@@ -334,7 +321,7 @@ public class ConversationListAdapter extends RecyclerSwipeAdapter<RecyclerView.V
             setCheckBoxStatus(conversationInfo, position, baseHolder);
         }
 
-        if (getCurrentPosition() == position && isClick()){
+        if (getCurrentPosition() == position && isClick()) {
             baseHolder.itemView.setBackgroundResource(R.color.conversation_item_clicked_color);
         } else {
             if (conversationInfo == null) {
@@ -346,14 +333,13 @@ public class ConversationListAdapter extends RecyclerSwipeAdapter<RecyclerView.V
                 baseHolder.itemView.setBackgroundColor(Color.WHITE);
             }
         }
-
     }
 
     private void setOnClickListener(RecyclerView.ViewHolder holder, int viewType, ConversationInfo conversationInfo) {
         if (holder instanceof HeaderViewHolder) {
             return;
         }
-        //设置点击和长按事件
+        // 设置点击和长按事件
         if (mOnConversationAdapterListener != null) {
             holder.itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -365,7 +351,7 @@ public class ConversationListAdapter extends RecyclerSwipeAdapter<RecyclerView.V
             holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View view) {
-                    mOnConversationAdapterListener.OnItemLongClick(view, conversationInfo);
+                    mOnConversationAdapterListener.onItemLongClick(view, conversationInfo);
                     int position = getIndexInAdapter(conversationInfo);
                     if (position != -1) {
                         setCurrentPosition(position, true);
@@ -391,9 +377,9 @@ public class ConversationListAdapter extends RecyclerSwipeAdapter<RecyclerView.V
         } else {
             commonHolder.multiSelectCheckBox.setVisibility(View.VISIBLE);
 
-            //设置条目状态
+            // 设置条目状态
             commonHolder.multiSelectCheckBox.setChecked(isItemChecked(conversationId));
-            //checkBox的监听
+            // checkBox的监听
             commonHolder.multiSelectCheckBox.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -404,7 +390,7 @@ public class ConversationListAdapter extends RecyclerSwipeAdapter<RecyclerView.V
                 }
             });
 
-            //条目view的监听
+            // 条目view的监听
             baseHolder.itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -447,7 +433,7 @@ public class ConversationListAdapter extends RecyclerSwipeAdapter<RecyclerView.V
 
         int dataPosition;
         if (isForwardFragment) {
-            dataPosition = position - SELECT_COUNT - SELECT_LABEL_COUNT;
+            dataPosition = position - SELECT_LABEL_COUNT;
         } else {
             dataPosition = position - HEADER_COUNT;
         }
@@ -462,7 +448,7 @@ public class ConversationListAdapter extends RecyclerSwipeAdapter<RecyclerView.V
     public int getItemCount() {
         int listSize = mDataSource.size();
         if (isForwardFragment) {
-            return listSize + SELECT_COUNT + SELECT_LABEL_COUNT + FOOTER_COUNT;
+            return listSize + SELECT_LABEL_COUNT + FOOTER_COUNT;
         }
         return listSize + HEADER_COUNT + FOOTER_COUNT;
     }
@@ -471,8 +457,6 @@ public class ConversationListAdapter extends RecyclerSwipeAdapter<RecyclerView.V
     public int getItemViewType(int position) {
         if (isForwardFragment) {
             if (position == 0) {
-                return ConversationInfo.TYPE_FORWAR_SELECT;
-            } else if (position == 1) {
                 return ConversationInfo.TYPE_RECENT_LABEL;
             }
         } else {
@@ -494,7 +478,7 @@ public class ConversationListAdapter extends RecyclerSwipeAdapter<RecyclerView.V
     private int getItemIndexInAdapter(int index) {
         int itemIndex;
         if (isForwardFragment) {
-            itemIndex = index + SELECT_LABEL_COUNT + SELECT_COUNT;
+            itemIndex = index + SELECT_LABEL_COUNT;
         } else {
             itemIndex = index + HEADER_COUNT;
         }
@@ -588,15 +572,17 @@ public class ConversationListAdapter extends RecyclerSwipeAdapter<RecyclerView.V
         return R.id.swipe;
     }
 
-    //header
+    // header
     static class HeaderViewHolder extends RecyclerView.ViewHolder {
+
         public HeaderViewHolder(@NonNull View itemView) {
             super(itemView);
         }
     }
 
-    //footer
+    // footer
     class FooterViewHolder extends ConversationBaseHolder {
+
         public FooterViewHolder(@NonNull View itemView) {
             super(itemView);
         }
@@ -618,6 +604,7 @@ public class ConversationListAdapter extends RecyclerSwipeAdapter<RecyclerView.V
     }
 
     static class ForwardLabelHolder extends ConversationBaseHolder {
+
         public ForwardLabelHolder(View itemView) {
             super(itemView);
         }
@@ -627,28 +614,4 @@ public class ConversationListAdapter extends RecyclerSwipeAdapter<RecyclerView.V
 
         }
     }
-
-    static class ForwardSelectHolder extends ConversationBaseHolder {
-        private final TextView titleView;
-        public ForwardSelectHolder(View itemView) {
-            super(itemView);
-            titleView = itemView.findViewById(R.id.forward_title);
-        }
-
-        @Override
-        public void layoutViews(ConversationInfo conversationInfo, int position) {
-
-        }
-
-        public void refreshTitle(boolean isCreateGroup){
-            if (titleView == null)return;
-
-            if (isCreateGroup){
-                titleView.setText(TUIConversationService.getAppContext().getString(R.string.forward_select_new_chat));
-            } else {
-                titleView.setText(TUIConversationService.getAppContext().getString(R.string.forward_select_from_contact));
-            }
-        }
-    }
-
 }

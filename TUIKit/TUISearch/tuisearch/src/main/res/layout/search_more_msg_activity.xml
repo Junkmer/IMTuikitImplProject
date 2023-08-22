@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -83,7 +82,7 @@
         android:background="@drawable/shape_search"
         android:visibility="visible">
 
-        <com.tencent.qcloud.tuikit.tuisearch.classicui.view.PageRecycleView
+        <com.tencent.qcloud.tuikit.tuisearch.classicui.widget.PageRecycleView
             android:id="@+id/message_rc_search"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

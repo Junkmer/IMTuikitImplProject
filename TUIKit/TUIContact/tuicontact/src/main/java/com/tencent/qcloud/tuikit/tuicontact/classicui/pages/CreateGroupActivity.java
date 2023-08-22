@@ -1,6 +1,5 @@
 package com.tencent.qcloud.tuikit.tuicontact.classicui.pages;
 
-
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -14,26 +13,24 @@ import android.text.style.ForegroundColorSpan;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.TextView;
-
 import androidx.annotation.Nullable;
-
 import com.tencent.imsdk.v2.V2TIMManager;
 import com.tencent.qcloud.tuicore.TUIConfig;
 import com.tencent.qcloud.tuicore.TUIConstants;
 import com.tencent.qcloud.tuicore.TUIThemeManager;
-import com.tencent.qcloud.tuicore.component.LineControllerView;
-import com.tencent.qcloud.tuicore.component.TitleBarLayout;
-import com.tencent.qcloud.tuicore.component.activities.BaseLightActivity;
-import com.tencent.qcloud.tuicore.component.activities.ImageSelectActivity;
-import com.tencent.qcloud.tuicore.component.dialog.TUIKitDialog;
-import com.tencent.qcloud.tuicore.component.gatherimage.SynthesizedImageView;
-import com.tencent.qcloud.tuicore.component.imageEngine.impl.GlideEngine;
-import com.tencent.qcloud.tuicore.component.interfaces.ITitleBarLayout;
-import com.tencent.qcloud.tuicore.component.interfaces.IUIKitCallback;
-import com.tencent.qcloud.tuicore.component.popupcard.PopupInputCard;
-import com.tencent.qcloud.tuicore.util.ImageUtil;
-import com.tencent.qcloud.tuicore.util.ScreenUtil;
 import com.tencent.qcloud.tuicore.util.ToastUtil;
+import com.tencent.qcloud.tuikit.timcommon.component.LineControllerView;
+import com.tencent.qcloud.tuikit.timcommon.component.PopupInputCard;
+import com.tencent.qcloud.tuikit.timcommon.component.TitleBarLayout;
+import com.tencent.qcloud.tuikit.timcommon.component.activities.BaseLightActivity;
+import com.tencent.qcloud.tuikit.timcommon.component.activities.ImageSelectActivity;
+import com.tencent.qcloud.tuikit.timcommon.component.dialog.TUIKitDialog;
+import com.tencent.qcloud.tuikit.timcommon.component.gatherimage.SynthesizedImageView;
+import com.tencent.qcloud.tuikit.timcommon.component.impl.GlideEngine;
+import com.tencent.qcloud.tuikit.timcommon.component.interfaces.ITitleBarLayout;
+import com.tencent.qcloud.tuikit.timcommon.component.interfaces.IUIKitCallback;
+import com.tencent.qcloud.tuikit.timcommon.util.ImageUtil;
+import com.tencent.qcloud.tuikit.timcommon.util.ScreenUtil;
 import com.tencent.qcloud.tuikit.tuicontact.R;
 import com.tencent.qcloud.tuikit.tuicontact.TUIContactConstants;
 import com.tencent.qcloud.tuikit.tuicontact.bean.ChatInfo;
@@ -42,7 +39,6 @@ import com.tencent.qcloud.tuikit.tuicontact.bean.GroupMemberInfo;
 import com.tencent.qcloud.tuikit.tuicontact.classicui.util.ContactStartChatUtils;
 import com.tencent.qcloud.tuikit.tuicontact.presenter.ContactPresenter;
 import com.tencent.qcloud.tuikit.tuicontact.util.TUIContactLog;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -58,7 +54,8 @@ public class CreateGroupActivity extends BaseLightActivity implements View.OnCli
     private LineControllerView groupTypeLv;
     private View groupAvatarLayout;
     private TextView confirmButton;
-    private TextView groupTypeContentView, groupTypeContentUrlView;
+    private TextView groupTypeContentView;
+    private TextView groupTypeContentUrlView;
 
     private String groupName;
     private String groupId;
@@ -70,7 +67,7 @@ public class CreateGroupActivity extends BaseLightActivity implements View.OnCli
 
     private ArrayList<GroupMemberInfo> mGroupMembers = new ArrayList<>();
     private boolean mCreating;
-    
+
     private ContactPresenter presenter;
 
     @Override
@@ -159,7 +156,7 @@ public class CreateGroupActivity extends BaseLightActivity implements View.OnCli
     }
 
     private void initGroupTypeContentView() {
-        switch(groupType) {
+        switch (groupType) {
             case V2TIMManager.GROUP_TYPE_WORK:
                 groupTypeContentView.setText(getString(R.string.group_work_content));
                 break;
@@ -214,6 +211,7 @@ public class CreateGroupActivity extends BaseLightActivity implements View.OnCli
         groupTypeContentUrlView.setText(spannedString);
         groupTypeContentUrlView.setMovementMethod(LinkMovementMethod.getInstance());
     }
+
     @Override
     public void onClick(View v) {
         if (v == groupAvatar || v == groupAvatarLayout) {
@@ -234,7 +232,7 @@ public class CreateGroupActivity extends BaseLightActivity implements View.OnCli
             Intent intent = new Intent(CreateGroupActivity.this, ImageSelectActivity.class);
             intent.putExtra(ImageSelectActivity.TITLE, getString(R.string.group_choose_avatar));
             intent.putExtra(ImageSelectActivity.SPAN_COUNT, 4);
-            intent.putExtra(ImageSelectActivity.PLACEHOLDER, com.tencent.qcloud.tuicore.R.drawable.core_default_user_icon_light);
+            intent.putExtra(ImageSelectActivity.PLACEHOLDER, com.tencent.qcloud.tuikit.timcommon.R.drawable.core_default_user_icon_light);
             intent.putExtra(ImageSelectActivity.ITEM_WIDTH, ScreenUtil.dip2px(77));
             intent.putExtra(ImageSelectActivity.ITEM_HEIGHT, ScreenUtil.dip2px(77));
             intent.putExtra(ImageSelectActivity.DATA, faceList);
@@ -285,7 +283,7 @@ public class CreateGroupActivity extends BaseLightActivity implements View.OnCli
             });
             popupInputCard.setTextExceedListener(new PopupInputCard.OnTextExceedListener() {
                 @Override
-                public void onTextExceedMax(){
+                public void onTextExceedMax() {
                     ToastUtil.toastLongMessage(getResources().getString(R.string.group_id_edit_exceed_tips));
                 }
             });
@@ -341,7 +339,7 @@ public class CreateGroupActivity extends BaseLightActivity implements View.OnCli
             @Override
             public void onError(String module, int errCode, String errMsg) {
                 mCreating = false;
-                //mGroupMembers.remove(selfInfo);
+                // mGroupMembers.remove(selfInfo);
                 if (errCode == TUIConstants.BuyingFeature.ERR_SDK_INTERFACE_NOT_SUPPORT || errCode == 11000) {
                     showNotSupportDialog();
                 }
@@ -377,28 +375,30 @@ public class CreateGroupActivity extends BaseLightActivity implements View.OnCli
         spannedString.setSpan(clickableSpan2, buyingGuidelinesIndex, buyingGuidelinesIndex + buyingGuidelines.length(), Spannable.SPAN_EXCLUSIVE_INCLUSIVE);
 
         TUIKitDialog.TUIIMUpdateDialog.getInstance()
-                .createDialog(this)
-                .setMovementMethod(LinkMovementMethod.getInstance())
-                .setShowOnlyDebug(true)
-                .setCancelable(true)
-                .setCancelOutside(true)
-                .setTitle(spannedString)
-                .setDialogWidth(0.75f)
-                .setDialogFeatureName(TUIConstants.BuyingFeature.BUYING_FEATURE_COMMUNITY)
-                .setPositiveButton(getString(R.string.contact_no_more_reminders), new View.OnClickListener() {
+            .createDialog(this)
+            .setMovementMethod(LinkMovementMethod.getInstance())
+            .setShowOnlyDebug(true)
+            .setCancelable(true)
+            .setCancelOutside(true)
+            .setTitle(spannedString)
+            .setDialogWidth(0.75f)
+            .setDialogFeatureName(TUIConstants.BuyingFeature.BUYING_FEATURE_COMMUNITY)
+            .setPositiveButton(getString(R.string.contact_no_more_reminders),
+                new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         TUIKitDialog.TUIIMUpdateDialog.getInstance().dismiss();
                         TUIKitDialog.TUIIMUpdateDialog.getInstance().setNeverShow(true);
                     }
                 })
-                .setNegativeButton(getString(R.string.contact_i_know), new View.OnClickListener() {
+            .setNegativeButton(getString(R.string.contact_i_know),
+                new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         TUIKitDialog.TUIIMUpdateDialog.getInstance().dismiss();
                     }
                 })
-                .show();
+            .show();
     }
 
     private void openWebUrl(String url) {
@@ -409,7 +409,7 @@ public class CreateGroupActivity extends BaseLightActivity implements View.OnCli
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
     }
-    
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -452,5 +452,4 @@ public class CreateGroupActivity extends BaseLightActivity implements View.OnCli
             }
         }
     }
-
 }

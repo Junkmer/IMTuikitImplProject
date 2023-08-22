@@ -3,9 +3,8 @@ package com.tencent.qcloud.tuikit.tuiconversation.classicui.widget;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.widget.RelativeLayout;
-
-import com.tencent.qcloud.tuicore.component.TitleBarLayout;
-import com.tencent.qcloud.tuicore.component.interfaces.IUIKitCallback;
+import com.tencent.qcloud.tuikit.timcommon.component.TitleBarLayout;
+import com.tencent.qcloud.tuikit.timcommon.component.interfaces.IUIKitCallback;
 import com.tencent.qcloud.tuikit.tuiconversation.R;
 import com.tencent.qcloud.tuikit.tuiconversation.bean.ConversationInfo;
 import com.tencent.qcloud.tuikit.tuiconversation.classicui.interfaces.IConversationLayout;
@@ -13,7 +12,6 @@ import com.tencent.qcloud.tuikit.tuiconversation.interfaces.IConversationListAda
 import com.tencent.qcloud.tuikit.tuiconversation.presenter.ConversationPresenter;
 
 public class ForwardSelectLayout extends RelativeLayout implements IConversationLayout {
-
     private TitleBarLayout titleBarLayout;
     private ConversationListLayout conversationList;
     private ConversationPresenter presenter;
@@ -54,7 +52,7 @@ public class ForwardSelectLayout extends RelativeLayout implements IConversation
         adapter.setForwardFragment(true);
         conversationList.setAdapter((IConversationListAdapter) adapter);
         presenter.setAdapter(adapter);
-        presenter.loadConversation(0);
+        presenter.loadMoreConversation();
     }
 
     public TitleBarLayout getTitleBar() {
@@ -62,9 +60,7 @@ public class ForwardSelectLayout extends RelativeLayout implements IConversation
     }
 
     @Override
-    public void setParentLayout(Object parent) {
-
-    }
+    public void setParentLayout(Object parent) {}
 
     @Override
     public ConversationListLayout getConversationList() {
@@ -72,35 +68,23 @@ public class ForwardSelectLayout extends RelativeLayout implements IConversation
     }
 
     @Override
-    public void setConversationTop(ConversationInfo conversation, IUIKitCallback callBack) {
-    }
+    public void setConversationTop(ConversationInfo conversation, IUIKitCallback callBack) {}
 
     @Override
-    public void deleteConversation(ConversationInfo conversation) {
-    }
+    public void deleteConversation(ConversationInfo conversation) {}
 
     @Override
-    public void clearConversationMessage(ConversationInfo conversation) {
-
-    }
+    public void clearConversationMessage(ConversationInfo conversation) {}
 
     @Override
-    public void markConversationHidden(ConversationInfo conversation) {
-
-    }
+    public void markConversationHidden(ConversationInfo conversation) {}
 
     @Override
-    public void hideFoldedItem(boolean needHide) {
-
-    }
+    public void hideFoldedItem(boolean needHide) {}
 
     @Override
-    public void clearUnreadStatusOfFoldItem() {
-
-    }
+    public void clearUnreadStatusOfFoldItem() {}
 
     @Override
-    public void markConversationUnread(ConversationInfo conversationInfo, boolean markRead) {
-
-    }
+    public void markConversationUnread(ConversationInfo conversationInfo, boolean markRead) {}
 }

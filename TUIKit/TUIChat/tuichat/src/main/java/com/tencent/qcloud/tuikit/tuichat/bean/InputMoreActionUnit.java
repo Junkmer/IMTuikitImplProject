@@ -1,18 +1,15 @@
 package com.tencent.qcloud.tuikit.tuichat.bean;
 
-
 import android.view.View;
 
 public class InputMoreActionUnit {
-
     private ChatInfo chatInfo;
 
     private int iconResId;
-
-    private int titleId;
+    private String name;
 
     private int actionId;
-    
+
     private View unitView;
 
     // 0, not need onActivityResult; 1, need onActivityResult
@@ -60,12 +57,12 @@ public class InputMoreActionUnit {
         this.iconResId = iconResId;
     }
 
-    public int getTitleId() {
-        return titleId;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public void setTitleId(int titleId) {
-        this.titleId = titleId;
+    public String getName() {
+        return name;
     }
 
     public int getActionId() {
@@ -95,10 +92,8 @@ public class InputMoreActionUnit {
     public boolean isEnable(int chatType) {
         return true;
     }
-    
-    public void onAction(String chatInfoId, int chatType) {
 
-    }
+    public void onAction(String chatInfoId, int chatType) {}
 
     public int getActionType() {
         return actionType;

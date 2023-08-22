@@ -1,23 +1,16 @@
 package com.tencent.qcloud.tuikit.tuichat.minimalistui.widget.message.viewholder;
 
 import android.text.TextUtils;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.animation.LinearInterpolator;
-import android.view.animation.RotateAnimation;
-import android.widget.FrameLayout;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 
+import com.tencent.qcloud.tuikit.timcommon.bean.TUIMessageBean;
+import com.tencent.qcloud.tuikit.timcommon.component.face.FaceManager;
+import com.tencent.qcloud.tuikit.timcommon.minimalistui.widget.message.MessageContentHolder;
 import com.tencent.qcloud.tuikit.tuichat.R;
 import com.tencent.qcloud.tuikit.tuichat.TUIChatService;
-import com.tencent.qcloud.tuikit.tuichat.bean.message.TUIMessageBean;
 import com.tencent.qcloud.tuikit.tuichat.bean.message.TextMessageBean;
-import com.tencent.qcloud.tuikit.tuichat.component.face.FaceManager;
 
 public class TextMessageHolder extends MessageContentHolder {
-
     public TextMessageHolder(View itemView) {
         super(itemView);
         timeInLineTextLayout = itemView.findViewById(R.id.text_message_layout);
@@ -56,5 +49,4 @@ public class TextMessageHolder extends MessageContentHolder {
             FaceManager.handlerEmojiText(timeInLineTextLayout.getTextView(), TUIChatService.getAppContext().getString(R.string.no_support_msg), false);
         }
     }
-
 }

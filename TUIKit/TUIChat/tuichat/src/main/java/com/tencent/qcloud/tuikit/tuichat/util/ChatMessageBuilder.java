@@ -2,15 +2,14 @@ package com.tencent.qcloud.tuikit.tuichat.util;
 
 import android.net.Uri;
 import android.text.TextUtils;
-
 import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
 import com.tencent.imsdk.v2.V2TIMManager;
 import com.tencent.imsdk.v2.V2TIMMessage;
-import com.tencent.qcloud.tuicore.util.FileUtil;
-import com.tencent.qcloud.tuicore.util.ImageUtil;
+import com.tencent.qcloud.tuikit.timcommon.bean.TUIMessageBean;
+import com.tencent.qcloud.tuikit.timcommon.util.FileUtil;
+import com.tencent.qcloud.tuikit.timcommon.util.ImageUtil;
+import com.tencent.qcloud.tuikit.timcommon.util.TIMCommonConstants;
 import com.tencent.qcloud.tuikit.tuichat.R;
-import com.tencent.qcloud.tuikit.tuichat.TUIChatConstants;
 import com.tencent.qcloud.tuikit.tuichat.TUIChatService;
 import com.tencent.qcloud.tuikit.tuichat.bean.ReplyPreviewBean;
 import com.tencent.qcloud.tuikit.tuichat.bean.message.FaceMessageBean;
@@ -20,12 +19,10 @@ import com.tencent.qcloud.tuikit.tuichat.bean.message.MergeMessageBean;
 import com.tencent.qcloud.tuikit.tuichat.bean.message.QuoteMessageBean;
 import com.tencent.qcloud.tuikit.tuichat.bean.message.ReplyMessageBean;
 import com.tencent.qcloud.tuikit.tuichat.bean.message.SoundMessageBean;
-import com.tencent.qcloud.tuikit.tuichat.bean.message.TUIMessageBean;
 import com.tencent.qcloud.tuikit.tuichat.bean.message.TextAtMessageBean;
 import com.tencent.qcloud.tuikit.tuichat.bean.message.TextMessageBean;
 import com.tencent.qcloud.tuikit.tuichat.bean.message.VideoMessageBean;
 import com.tencent.qcloud.tuikit.tuichat.config.TUIChatConfigs;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -60,9 +57,9 @@ public class ChatMessageBuilder {
      * @param groupId  自定义表情所在的表情组id
      * @param faceName 表情的名称
      * @return
-     * 
+     *
      * Create a message with a custom emoji
-     * 
+     *
      * @param groupId  The expression group id where the custom expression is located
      * @param faceName name
      * @return
@@ -79,14 +76,14 @@ public class ChatMessageBuilder {
 
     /**
      * 创建一条图片消息
-     * 
+     *
      * Create a image message
      *
-     * @param uri 图片 URI
+     * @param imagePath 图片 path
      * @return
      */
-    public static TUIMessageBean buildImageMessage(final Uri uri) {
-        String path = ImageUtil.getImagePathAfterRotate(uri);
+    public static TUIMessageBean buildImageMessage(final String imagePath) {
+        String path = ImageUtil.getImagePathAfterRotate(imagePath);
         if (TextUtils.isEmpty(path)) {
             return null;
         }
@@ -97,7 +94,6 @@ public class ChatMessageBuilder {
         messageBean.setCommonAttribute(v2TIMMessage);
         messageBean.onProcessMessage(v2TIMMessage);
 
-        messageBean.setDataUri(uri);
         int[] size = ImageUtil.getImageSize(path);
         messageBean.setDataPath(path);
         messageBean.setImgWidth(size[0]);
@@ -107,7 +103,7 @@ public class ChatMessageBuilder {
 
     /**
      * 创建一条视频消息
-     * 
+     *
      * create a video message
      *
      * @param imgPath   视频缩略图路径
@@ -128,17 +124,16 @@ public class ChatMessageBuilder {
         messageBean.setCommonAttribute(v2TIMMessage);
         messageBean.onProcessMessage(v2TIMMessage);
 
-        Uri videoUri = Uri.fromFile(new File(videoPath));
         messageBean.setImgWidth(width);
         messageBean.setImgHeight(height);
-        messageBean.setDataPath(imgPath);
-        messageBean.setDataUri(videoUri);
+        messageBean.setSnapshotPath(imgPath);
+        messageBean.setVideoPath(videoPath);
         return messageBean;
     }
 
     /**
      * 创建一条音频消息
-     * 
+     *
      * create a audio message
      *
      * @param recordPath 音频路径
@@ -159,7 +154,7 @@ public class ChatMessageBuilder {
 
     /**
      * 创建一条文件消息
-     * 
+     *
      * create a text message
      *
      * @param fileUri 文件路径
@@ -187,7 +182,7 @@ public class ChatMessageBuilder {
 
     /**
      * 创建一条 onebyone 转发消息
-     * 
+     *
      * create a forward message
      *
      * @param v2TIMMessage 要转发的消息
@@ -202,15 +197,12 @@ public class ChatMessageBuilder {
 
     /**
      * 创建一条 merge 转发消息
-     * 
+     *
      * create a merge message
      *
      * @return
      */
-    public static TUIMessageBean buildMergeMessage(List<TUIMessageBean> messageInfoList,
-                                                   String title,
-                                                   List<String> abstractList,
-                                                   String compatibleText) {
+    public static TUIMessageBean buildMergeMessage(List<TUIMessageBean> messageInfoList, String title, List<String> abstractList, String compatibleText) {
         if (messageInfoList == null || messageInfoList.isEmpty()) {
             return null;
         }
@@ -218,8 +210,7 @@ public class ChatMessageBuilder {
         for (int i = 0; i < messageInfoList.size(); i++) {
             msgList.add(messageInfoList.get(i).getV2TIMMessage());
         }
-        V2TIMMessage mergeMsg = V2TIMManager.getMessageManager()
-                .createMergerMessage(msgList, title, abstractList, compatibleText);
+        V2TIMMessage mergeMsg = V2TIMManager.getMessageManager().createMergerMessage(msgList, title, abstractList, compatibleText);
         mergeMsg.setNeedReadReceipt(TUIChatConfigs.getConfigs().getGeneralConfig().isShowRead());
 
         MergeMessageBean messageBean = new MergeMessageBean();
@@ -232,7 +223,7 @@ public class ChatMessageBuilder {
      * 创建一条自定义消息
      *
      * create a custom message
-     * 
+     *
      * @param data        自定义消息内容，可以是任何内容
      * @param description 自定义消息描述内容，可以被搜索到
      * @param extension   扩展内容
@@ -241,6 +232,7 @@ public class ChatMessageBuilder {
     public static TUIMessageBean buildCustomMessage(String data, String description, byte[] extension) {
         V2TIMMessage v2TIMMessage = V2TIMManager.getMessageManager().createCustomMessage(data.getBytes(), description, extension);
         v2TIMMessage.setNeedReadReceipt(TUIChatConfigs.getConfigs().getGeneralConfig().isShowRead());
+        v2TIMMessage.setSupportMessageExtension(true);
 
         TUIMessageBean message = ChatMessageParser.parseMessage(v2TIMMessage);
         if (message.getExtra() == null) {
@@ -251,7 +243,7 @@ public class ChatMessageBuilder {
 
     /**
      * 创建一条群消息自定义内容
-     * 
+     *
      * create a custom message for group
      *
      * @param customMessage 消息内容
@@ -282,7 +274,7 @@ public class ChatMessageBuilder {
     private static TUIMessageBean buildReplyMessage(V2TIMMessage v2TIMMessage, ReplyPreviewBean previewBean) {
         Map<String, ReplyPreviewBean> cloudData = new HashMap<>();
         Gson gson = new Gson();
-        cloudData.put(TUIChatConstants.MESSAGE_REPLY_KEY, previewBean);
+        cloudData.put(TIMCommonConstants.MESSAGE_REPLY_KEY, previewBean);
         v2TIMMessage.setCloudCustomData(gson.toJson(cloudData));
 
         QuoteMessageBean replyMessageBean;
@@ -297,7 +289,6 @@ public class ChatMessageBuilder {
     }
 
     public static ReplyPreviewBean buildReplyPreviewBean(TUIMessageBean messageBean) {
-        String messageAbstract = ChatMessageParser.getReplyMessageAbstract(messageBean);
         String sender = messageBean.getNickName();
         if (TextUtils.isEmpty(sender)) {
             sender = messageBean.getSender();
@@ -310,6 +301,7 @@ public class ChatMessageBuilder {
         } else {
             previewBean.setMessageRootID(messageBean.getId());
         }
+        String messageAbstract = ChatMessageParser.getReplyMessageAbstract(messageBean);
         previewBean.setOriginalMessageBean(messageBean);
         previewBean.setMessageID(messageBean.getId());
         previewBean.setMessageAbstract(messageAbstract);
@@ -320,25 +312,4 @@ public class ChatMessageBuilder {
 
         return previewBean;
     }
-
-    public static void mergeCloudCustomData(TUIMessageBean messageBean, String key, Object data) {
-        String cloudCustomData = messageBean.getV2TIMMessage().getCloudCustomData();
-        Gson gson = new Gson();
-        HashMap hashMap = null;
-        if (TextUtils.isEmpty(cloudCustomData)) {
-            hashMap = new HashMap();
-        } else {
-            try {
-                hashMap = gson.fromJson(cloudCustomData, HashMap.class);
-            } catch (JsonSyntaxException e) {
-                TUIChatLog.e(TAG, " mergeCloudCustomData error " + e.getMessage());
-            }
-        }
-        if (hashMap != null) {
-            hashMap.put(key, data);
-            cloudCustomData = gson.toJson(hashMap);
-        }
-        messageBean.getV2TIMMessage().setCloudCustomData(cloudCustomData);
-    }
-
 }

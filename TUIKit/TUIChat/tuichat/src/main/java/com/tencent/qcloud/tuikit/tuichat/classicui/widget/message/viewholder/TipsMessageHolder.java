@@ -1,20 +1,17 @@
 package com.tencent.qcloud.tuikit.tuichat.classicui.widget.message.viewholder;
 
 import android.text.Html;
-import android.text.TextUtils;
 import android.view.View;
 import android.widget.TextView;
-
 import com.tencent.imsdk.v2.V2TIMManager;
 import com.tencent.imsdk.v2.V2TIMMessage;
+import com.tencent.qcloud.tuikit.timcommon.bean.TUIMessageBean;
+import com.tencent.qcloud.tuikit.timcommon.classicui.widget.message.MessageBaseHolder;
 import com.tencent.qcloud.tuikit.tuichat.R;
 import com.tencent.qcloud.tuikit.tuichat.TUIChatConstants;
-import com.tencent.qcloud.tuikit.tuichat.TUIChatService;
-import com.tencent.qcloud.tuikit.tuichat.bean.message.TUIMessageBean;
 import com.tencent.qcloud.tuikit.tuichat.bean.message.TipsMessageBean;
 
 public class TipsMessageHolder extends MessageBaseHolder {
-
     protected TextView mChatTipsTv;
     protected TextView mReEditText;
 
@@ -64,18 +61,16 @@ public class TipsMessageHolder extends MessageBaseHolder {
                 }
                 showString = itemView.getResources().getString(R.string.revoke_tips_you);
             } else if (msg.isGroup()) {
-                String sender = TUIChatConstants.covert2HTMLString(
-                        (TextUtils.isEmpty(msg.getNameCard())
-                                ? msg.getSender()
-                                : msg.getNameCard()));
+                String sender = TUIChatConstants.covert2HTMLString(msg.getUserDisplayName());
                 showString = sender + itemView.getResources().getString(R.string.revoke_tips);
+                mReEditText.setVisibility(View.GONE);
+                mReEditText.setOnClickListener(null);
             }
             mChatTipsTv.setText(Html.fromHtml(showString));
         }
 
         if (msg instanceof TipsMessageBean) {
-            mChatTipsTv.setText(Html.fromHtml( ((TipsMessageBean) msg).getText()));
+            mChatTipsTv.setText(Html.fromHtml(((TipsMessageBean) msg).getText()));
         }
     }
-
 }

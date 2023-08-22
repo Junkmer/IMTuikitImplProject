@@ -2,20 +2,17 @@ package com.tencent.qcloud.tuikit.tuiconversation.minimalistui.widget;
 
 import android.content.Context;
 import android.util.AttributeSet;
-
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.SimpleItemAnimator;
-
-import com.tencent.qcloud.tuicore.component.CustomLinearLayoutManager;
+import com.tencent.qcloud.tuikit.timcommon.component.CustomLinearLayoutManager;
 import com.tencent.qcloud.tuikit.tuiconversation.interfaces.IConversationListAdapter;
 import com.tencent.qcloud.tuikit.tuiconversation.minimalistui.interfaces.IConversationListLayout;
 import com.tencent.qcloud.tuikit.tuiconversation.minimalistui.interfaces.OnConversationAdapterListener;
 import com.tencent.qcloud.tuikit.tuiconversation.presenter.ConversationFoldPresenter;
 
 public class FoldedConversationListLayout extends RecyclerView implements IConversationListLayout {
-
     private ConversationListAdapter mAdapter;
     private ConversationFoldPresenter presenter;
     private boolean isFolded = false;

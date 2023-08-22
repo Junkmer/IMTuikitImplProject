@@ -3,36 +3,31 @@ package com.tencent.qcloud.tuikit.tuichat.minimalistui.widget.message.viewholder
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-
 import androidx.recyclerview.widget.RecyclerView;
-
+import com.tencent.qcloud.tuikit.timcommon.interfaces.ICommonMessageAdapter;
+import com.tencent.qcloud.tuikit.timcommon.minimalistui.widget.message.MessageBaseHolder;
 import com.tencent.qcloud.tuikit.tuichat.R;
-import com.tencent.qcloud.tuikit.tuichat.bean.message.TipsMessageBean;
 import com.tencent.qcloud.tuikit.tuichat.minimalistui.MinimalistUIService;
-import com.tencent.qcloud.tuikit.tuichat.minimalistui.interfaces.ICommonMessageAdapter;
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
 public class MessageViewHolderFactory {
-
     public static RecyclerView.ViewHolder getInstance(ViewGroup parent, ICommonMessageAdapter adapter, int viewType) {
-
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
         RecyclerView.ViewHolder holder = null;
         View view = null;
 
         if (viewType == MessageBaseHolder.MSG_TYPE_HEADER_VIEW) {
-            view = inflater.inflate(R.layout.loading_progress_bar, parent, false);
+            view = inflater.inflate(R.layout.chat_loading_progress_bar, parent, false);
             holder = new MessageHeaderHolder(view);
             return holder;
         }
 
-        if (viewType == MinimalistUIService.getInstance().getViewType(TipsMessageBean.class)) {
+        if (MinimalistUIService.getInstance().isNeedEmptyViewGroup(viewType)) {
             view = inflater.inflate(R.layout.message_adapter_item_empty, parent, false);
-            holder = new TipsMessageHolder(view);
+            holder = getViewHolder(view, viewType);
         } else {
-            view = inflater.inflate(R.layout.minimalist_message_adapter_item_content, parent, false);
+            view = inflater.inflate(com.tencent.qcloud.tuikit.timcommon.R.layout.minimalist_message_adapter_item_content, parent, false);
             holder = getViewHolder(view, viewType);
         }
 
@@ -45,7 +40,8 @@ public class MessageViewHolderFactory {
     }
 
     private static RecyclerView.ViewHolder getViewHolder(View view, int viewType) {
-        Class<? extends MessageBaseHolder> messageHolderClazz = MinimalistUIService.getInstance().getMessageViewHolderClass(viewType);;
+        Class<? extends MessageBaseHolder> messageHolderClazz = MinimalistUIService.getInstance().getMessageViewHolderClass(viewType);
+        ;
         if (messageHolderClazz != null) {
             Constructor<? extends MessageBaseHolder> constructor;
             try {
@@ -63,5 +59,4 @@ public class MessageViewHolderFactory {
         }
         return null;
     }
-
 }

@@ -6,15 +6,16 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.tencent.qcloud.tuicore.TUIThemeManager;
+import com.tencent.qcloud.tuikit.timcommon.bean.TUIReplyQuoteBean;
+import com.tencent.qcloud.tuikit.timcommon.minimalistui.widget.message.TUIReplyQuoteView;
 import com.tencent.qcloud.tuikit.tuichat.R;
 import com.tencent.qcloud.tuikit.tuichat.bean.message.reply.FileReplyQuoteBean;
-import com.tencent.qcloud.tuikit.tuichat.bean.message.reply.TUIReplyQuoteBean;
 
 public class FileReplyQuoteView extends TUIReplyQuoteView {
-
     private View fileMsgLayout;
     private ImageView fileMsgIcon;
     private TextView fileMsgTv;
+    
     @Override
     public int getLayoutResourceId() {
         return R.layout.chat_reply_quote_file_layout;
@@ -38,9 +39,11 @@ public class FileReplyQuoteView extends TUIReplyQuoteView {
     @Override
     public void setSelf(boolean isSelf) {
         if (!isSelf) {
-            fileMsgTv.setTextColor(fileMsgTv.getResources().getColor(TUIThemeManager.getAttrResId(fileMsgTv.getContext(), R.attr.chat_other_reply_quote_text_color)));
+            fileMsgTv.setTextColor(
+                fileMsgTv.getResources().getColor(TUIThemeManager.getAttrResId(fileMsgTv.getContext(), R.attr.chat_other_reply_quote_text_color)));
         } else {
-            fileMsgTv.setTextColor(fileMsgTv.getResources().getColor(TUIThemeManager.getAttrResId(fileMsgTv.getContext(), R.attr.chat_self_reply_quote_text_color)));
+            fileMsgTv.setTextColor(
+                fileMsgTv.getResources().getColor(TUIThemeManager.getAttrResId(fileMsgTv.getContext(), R.attr.chat_self_reply_quote_text_color)));
         }
     }
 }

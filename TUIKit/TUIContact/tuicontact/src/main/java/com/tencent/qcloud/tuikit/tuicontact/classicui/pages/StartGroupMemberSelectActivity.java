@@ -8,31 +8,28 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
-import com.tencent.qcloud.tuicore.component.TitleBarLayout;
-import com.tencent.qcloud.tuicore.component.activities.BaseLightActivity;
-import com.tencent.qcloud.tuicore.component.imageEngine.impl.GlideEngine;
-import com.tencent.qcloud.tuicore.component.interfaces.ITitleBarLayout;
+import com.tencent.qcloud.tuicore.TUIConstants;
 import com.tencent.qcloud.tuicore.util.ToastUtil;
+import com.tencent.qcloud.tuikit.timcommon.component.TitleBarLayout;
+import com.tencent.qcloud.tuikit.timcommon.component.activities.BaseLightActivity;
+import com.tencent.qcloud.tuikit.timcommon.component.impl.GlideEngine;
+import com.tencent.qcloud.tuikit.timcommon.component.interfaces.ITitleBarLayout;
 import com.tencent.qcloud.tuikit.tuicontact.R;
 import com.tencent.qcloud.tuikit.tuicontact.TUIContactConstants;
 import com.tencent.qcloud.tuikit.tuicontact.bean.ContactItemBean;
 import com.tencent.qcloud.tuikit.tuicontact.bean.GroupMemberInfo;
 import com.tencent.qcloud.tuikit.tuicontact.classicui.widget.ContactListView;
 import com.tencent.qcloud.tuikit.tuicontact.presenter.ContactPresenter;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 public class StartGroupMemberSelectActivity extends BaseLightActivity {
-
     private static final String TAG = StartGroupMemberSelectActivity.class.getSimpleName();
 
     private TitleBarLayout mTitleBar;
@@ -44,6 +41,7 @@ public class StartGroupMemberSelectActivity extends BaseLightActivity {
     private TextView confirmButton;
     private ContactPresenter presenter;
     private int limit;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -52,25 +50,25 @@ public class StartGroupMemberSelectActivity extends BaseLightActivity {
         init();
     }
 
-    private ArrayList<String> getMembersNameCard(){
+    private ArrayList<String> getMembersNameCard() {
         if (mMembers.size() == 0) {
             return new ArrayList<>();
         }
 
         ArrayList<String> nameCards = new ArrayList<>();
-        for(int i = 0; i < mMembers.size(); i++){
+        for (int i = 0; i < mMembers.size(); i++) {
             nameCards.add(mMembers.get(i).getNameCard());
         }
         return nameCards;
     }
 
-    private ArrayList<String> getMembersUserId(){
+    private ArrayList<String> getMembersUserId() {
         if (mMembers.size() == 0) {
             return new ArrayList<>();
         }
 
         ArrayList<String> userIds = new ArrayList<>();
-        for(int i = 0; i < mMembers.size(); i++){
+        for (int i = 0; i < mMembers.size(); i++) {
             userIds.add(mMembers.get(i).getAccount());
         }
         return userIds;
@@ -79,11 +77,8 @@ public class StartGroupMemberSelectActivity extends BaseLightActivity {
     private void init() {
         mMembers.clear();
 
-        String groupId = getIntent().getStringExtra(TUIContactConstants.Group.GROUP_ID);
-        boolean isSelectFriends = getIntent().getBooleanExtra(TUIContactConstants.Selection.SELECT_FRIENDS, false);
-        boolean isSelectForCall = getIntent().getBooleanExtra(TUIContactConstants.Selection.SELECT_FOR_CALL, false);
-        limit = getIntent().getIntExtra(TUIContactConstants.Selection.LIMIT, Integer.MAX_VALUE);
-        alreadySelectedList = getIntent().getStringArrayListExtra(TUIContactConstants.Selection.SELECTED_LIST);
+        limit = getIntent().getIntExtra(TUIConstants.TUIContact.StartActivity.GroupMemberSelect.MEMBER_LIMIT, Integer.MAX_VALUE);
+        alreadySelectedList = getIntent().getStringArrayListExtra(TUIConstants.TUIContact.StartActivity.GroupMemberSelect.SELECTED_LIST);
         mTitleBar = findViewById(R.id.group_create_title_bar);
         mTitleBar.setTitle(getResources().getString(com.tencent.qcloud.tuicore.R.string.sure), ITitleBarLayout.Position.RIGHT);
         mTitleBar.getRightIcon().setVisibility(View.GONE);
@@ -108,11 +103,13 @@ public class StartGroupMemberSelectActivity extends BaseLightActivity {
         mContactListView.setAlreadySelectedList(alreadySelectedList);
         presenter = new ContactPresenter();
         presenter.setFriendListListener();
+        boolean isSelectForCall = getIntent().getBooleanExtra(TUIConstants.TUIContact.StartActivity.GroupMemberSelect.SELECT_FOR_CALL, false);
         presenter.setIsForCall(isSelectForCall);
         mContactListView.setPresenter(presenter);
         presenter.setContactListView(mContactListView);
-
+        String groupId = getIntent().getStringExtra(TUIConstants.TUIContact.StartActivity.GroupMemberSelect.GROUP_ID);
         mContactListView.setGroupId(groupId);
+        boolean isSelectFriends = getIntent().getBooleanExtra(TUIConstants.TUIContact.StartActivity.GroupMemberSelect.SELECT_FRIENDS, false);
         if (isSelectFriends) {
             mTitleBar.setTitle(getString(R.string.add_group_member), TitleBarLayout.Position.MIDDLE);
             mContactListView.loadDataSource(ContactListView.DataSource.FRIEND_LIST);
@@ -128,8 +125,10 @@ public class StartGroupMemberSelectActivity extends BaseLightActivity {
                         mMembers.clear();
 
                         Intent i = new Intent();
-                        i.putStringArrayListExtra(TUIContactConstants.Selection.USER_NAMECARD_SELECT, new ArrayList<String>(Arrays.asList(getString(R.string.at_all))));
-                        i.putStringArrayListExtra(TUIContactConstants.Selection.USER_ID_SELECT, new ArrayList<String>(Arrays.asList(TUIContactConstants.Selection.SELECT_ALL)));
+                        i.putStringArrayListExtra(
+                            TUIContactConstants.Selection.USER_NAMECARD_SELECT, new ArrayList<String>(Arrays.asList(getString(R.string.at_all))));
+                        i.putStringArrayListExtra(
+                            TUIContactConstants.Selection.USER_ID_SELECT, new ArrayList<String>(Arrays.asList(TUIContactConstants.Selection.SELECT_ALL)));
                         setResult(3, i);
 
                         finish();
@@ -163,7 +162,6 @@ public class StartGroupMemberSelectActivity extends BaseLightActivity {
                 confirmAndFinish();
             }
         });
-
     }
 
     private void confirmAndFinish() {
@@ -178,8 +176,11 @@ public class StartGroupMemberSelectActivity extends BaseLightActivity {
             friendIdList.add(memberInfo.getAccount());
         }
         i.putExtra(TUIContactConstants.Selection.LIST, (Serializable) friendIdList);
+        i.putExtra(TUIConstants.TUIContact.StartActivity.GroupMemberSelect.DATA_LIST, (Serializable) friendIdList);
         i.putStringArrayListExtra(TUIContactConstants.Selection.USER_NAMECARD_SELECT, getMembersNameCard());
+        i.putStringArrayListExtra(TUIConstants.TUIContact.StartActivity.GroupMemberSelect.USER_NAME_CARD_SELECT, getMembersNameCard());
         i.putStringArrayListExtra(TUIContactConstants.Selection.USER_ID_SELECT, getMembersUserId());
+        i.putStringArrayListExtra(TUIConstants.TUIContact.StartActivity.GroupMemberSelect.USER_ID_SELECT, getMembersUserId());
         i.putExtras(getIntent());
         setResult(3, i);
 
@@ -214,11 +215,11 @@ public class StartGroupMemberSelectActivity extends BaseLightActivity {
 
         public class SelectedViewHolder extends RecyclerView.ViewHolder {
             public ImageView userIconView;
+
             public SelectedViewHolder(@NonNull View itemView) {
                 super(itemView);
                 userIconView = (ImageView) itemView.findViewById(R.id.ivAvatar);
             }
         }
     }
-
 }

@@ -3,7 +3,6 @@ package com.tencent.qcloud.tuikit.tuisearch.util;
 import android.content.Context;
 import android.net.Uri;
 import android.text.TextUtils;
-
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.tencent.imsdk.v2.V2TIMCustomElem;
@@ -22,24 +21,22 @@ import com.tencent.imsdk.v2.V2TIMSignalingInfo;
 import com.tencent.imsdk.v2.V2TIMSoundElem;
 import com.tencent.imsdk.v2.V2TIMTextElem;
 import com.tencent.imsdk.v2.V2TIMVideoElem;
+import com.tencent.qcloud.tuicore.ServiceInitializer;
 import com.tencent.qcloud.tuicore.TUIConfig;
 import com.tencent.qcloud.tuicore.TUIConstants;
-import com.tencent.qcloud.tuicore.util.DateTimeUtil;
-import com.tencent.qcloud.tuicore.util.FileUtil;
-import com.tencent.qcloud.tuicore.util.ImageUtil;
+import com.tencent.qcloud.tuikit.timcommon.util.DateTimeUtil;
+import com.tencent.qcloud.tuikit.timcommon.util.FileUtil;
+import com.tencent.qcloud.tuikit.timcommon.util.ImageUtil;
 import com.tencent.qcloud.tuikit.tuisearch.R;
 import com.tencent.qcloud.tuikit.tuisearch.TUISearchConstants;
-import com.tencent.qcloud.tuikit.tuisearch.TUISearchService;
 import com.tencent.qcloud.tuikit.tuisearch.bean.CallModel;
 import com.tencent.qcloud.tuikit.tuisearch.bean.MessageInfo;
 import com.tencent.qcloud.tuikit.tuisearch.message.MessageCustom;
 import com.tencent.qcloud.tuikit.tuisearch.message.MessageTyping;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-
 
 public class MessageInfoUtil {
     private static final String TAG = MessageInfoUtil.class.getSimpleName();
@@ -60,7 +57,8 @@ public class MessageInfoUtil {
     }
 
     public static MessageInfo convertTIMMessage2MessageInfo(V2TIMMessage timMessage) {
-        if (timMessage == null || timMessage.getStatus() == V2TIMMessage.V2TIM_MSG_STATUS_HAS_DELETED || timMessage.getElemType() == V2TIMMessage.V2TIM_ELEM_TYPE_NONE) {
+        if (timMessage == null || timMessage.getStatus() == V2TIMMessage.V2TIM_MSG_STATUS_HAS_DELETED
+            || timMessage.getElemType() == V2TIMMessage.V2TIM_ELEM_TYPE_NONE) {
             return null;
         }
         return createMessageInfo(timMessage);
@@ -70,9 +68,7 @@ public class MessageInfoUtil {
         try {
             String str = new String(data, "UTF-8");
             MessageTyping typing = new Gson().fromJson(str, MessageTyping.class);
-            if (typing != null
-                    && typing.userAction == MessageTyping.TYPE_TYPING
-                    && TextUtils.equals(typing.actionParam, MessageTyping.EDIT_START)) {
+            if (typing != null && typing.userAction == MessageTyping.TYPE_TYPING && TextUtils.equals(typing.actionParam, MessageTyping.EDIT_START)) {
                 return true;
             }
             return false;
@@ -83,15 +79,14 @@ public class MessageInfoUtil {
     }
 
     public static MessageInfo createMessageInfo(V2TIMMessage timMessage) {
-        if (timMessage == null
-                || timMessage.getStatus() == V2TIMMessage.V2TIM_MSG_STATUS_HAS_DELETED
-                || timMessage.getElemType() == V2TIMMessage.V2TIM_ELEM_TYPE_NONE) {
+        if (timMessage == null || timMessage.getStatus() == V2TIMMessage.V2TIM_MSG_STATUS_HAS_DELETED
+            || timMessage.getElemType() == V2TIMMessage.V2TIM_ELEM_TYPE_NONE) {
             TUISearchLog.e(TAG, "ele2MessageInfo parameters error");
             return null;
         }
 
-        Context context = TUISearchService.getAppContext();
-        if (context == null){
+        Context context = ServiceInitializer.getAppContext();
+        if (context == null) {
             TUISearchLog.e(TAG, "context == null");
             return new MessageInfo();
         }
@@ -188,8 +183,8 @@ public class MessageInfoUtil {
                 businessIdForTimeout = (Double) businessIdObj;
             }
 
-            if (TextUtils.equals(businessId, TUIConstants.TUICalling.CUSTOM_MESSAGE_BUSINESS_ID) ||
-                    Math.abs(businessIdForTimeout - TUIConstants.TUICalling.CALL_TIMEOUT_BUSINESS_ID) < 0.000001) {
+            if (TextUtils.equals(businessId, TUIConstants.TUICalling.CUSTOM_MESSAGE_BUSINESS_ID)
+                || Math.abs(businessIdForTimeout - TUIConstants.TUICalling.CALL_TIMEOUT_BUSINESS_ID) < 0.000001) {
                 boolean isGroup = !TextUtils.isEmpty(timMessage.getGroupID());
                 if (isGroup) {
                     msgInfo.setMsgType(MessageInfo.MSG_TYPE_TIPS);
@@ -238,26 +233,23 @@ public class MessageInfoUtil {
         boolean isGroup = messageInfo.isGroup();
         String senderShowName = getDisplayName(timMessage);
         String content = "";
-        Context context = TUISearchService.getAppContext();
+        Context context = ServiceInitializer.getAppContext();
         switch (callModel.action) {
             case CallModel.VIDEO_CALL_ACTION_DIALING:
-                content = isGroup ? ("\"" + senderShowName + "\"" +
-                        context.getString(R.string.start_group_call)) : (context.getString(R.string.start_call));
+                content = isGroup ? ("\"" + senderShowName + "\"" + context.getString(R.string.start_group_call)) : (context.getString(R.string.start_call));
                 break;
             case CallModel.VIDEO_CALL_ACTION_SPONSOR_CANCEL:
                 content = isGroup ? context.getString(R.string.cancle_group_call) : context.getString(R.string.cancle_call);
                 break;
             case CallModel.VIDEO_CALL_ACTION_LINE_BUSY:
-                content = isGroup ? ("\"" + senderShowName + "\"" +
-                        context.getString(R.string.line_busy)) : context.getString(R.string.other_line_busy);
+                content = isGroup ? ("\"" + senderShowName + "\"" + context.getString(R.string.line_busy)) : context.getString(R.string.other_line_busy);
                 break;
             case CallModel.VIDEO_CALL_ACTION_REJECT:
-                content = isGroup ? ("\"" + senderShowName + "\"" +
-                        context.getString(R.string.reject_group_calls)) : context.getString(R.string.reject_calls);
+                content = isGroup ? ("\"" + senderShowName + "\"" + context.getString(R.string.reject_group_calls)) : context.getString(R.string.reject_calls);
                 break;
             case CallModel.VIDEO_CALL_ACTION_SPONSOR_TIMEOUT:
                 if (isGroup && callModel.invitedList != null && callModel.invitedList.size() == 1
-                        && callModel.invitedList.get(0).equals(timMessage.getSender())) {
+                    && callModel.invitedList.get(0).equals(timMessage.getSender())) {
                     content = "\"" + senderShowName + "\"" + context.getString(R.string.no_response_call);
                 } else {
                     StringBuilder inviteeShowStringBuilder = new StringBuilder();
@@ -269,17 +261,16 @@ public class MessageInfoUtil {
                             inviteeShowStringBuilder.delete(inviteeShowStringBuilder.length() - 1, inviteeShowStringBuilder.length());
                         }
                     }
-                    content = isGroup ? ("\"" + inviteeShowStringBuilder.toString() + "\""
-                            + context.getString(R.string.no_response_call)) : context.getString(R.string.no_response_call);
+                    content = isGroup ? ("\"" + inviteeShowStringBuilder.toString() + "\"" + context.getString(R.string.no_response_call))
+                                      : context.getString(R.string.no_response_call);
                 }
                 break;
             case CallModel.VIDEO_CALL_ACTION_ACCEPT:
-                content = isGroup ? ("\"" + senderShowName + "\"" +
-                        context.getString(R.string.accept_call)) : context.getString(R.string.accept_call);
+                content = isGroup ? ("\"" + senderShowName + "\"" + context.getString(R.string.accept_call)) : context.getString(R.string.accept_call);
                 break;
             case CallModel.VIDEO_CALL_ACTION_HANGUP:
-                content = isGroup ? context.getString(R.string.stop_group_call) :
-                        context.getString(R.string.stop_call_tip) + DateTimeUtil.formatSecondsTo00(callModel.duration);
+                content = isGroup ? context.getString(R.string.stop_group_call)
+                                  : context.getString(R.string.stop_call_tip) + DateTimeUtil.formatSecondsTo00(callModel.duration);
                 break;
             default:
                 content = context.getString(R.string.invalid_command);
@@ -304,10 +295,9 @@ public class MessageInfoUtil {
                 anchorName = roomName;
             }
         }
-        content = "[" + anchorName + TUISearchService.getAppContext().getString(R.string.live) + "]";
+        content = "[" + anchorName + ServiceInitializer.getAppContext().getString(R.string.live) + "]";
         messageInfo.setExtra(content);
     }
-
 
     public static String getDisplayName(V2TIMMessage timMessage) {
         String displayName;
@@ -350,7 +340,6 @@ public class MessageInfoUtil {
         setMessageInfoCommonAttributes(msgInfo, timMessage);
 
         V2TIMGroupTipsElem groupTipElem = timMessage.getGroupTipsElem();
-        int tipsType = groupTipElem.getType();
         String operationUser = "";
         String targetUser = "";
         if (groupTipElem.getMemberList().size() > 0) {
@@ -379,7 +368,7 @@ public class MessageInfoUtil {
         if (!TextUtils.isEmpty(operationUser)) {
             operationUser = TUISearchConstants.covert2HTMLString(operationUser);
         }
-
+        int tipsType = groupTipElem.getType();
         String tipsMessage = "";
         if (tipsType == V2TIMGroupTipsElem.V2TIM_GROUP_TIPS_TYPE_JOIN) {
             msgInfo.setMsgType(MessageInfo.MSG_TYPE_GROUP_JOIN);
@@ -422,7 +411,7 @@ public class MessageInfoUtil {
                         tipsMessage = operationUser + context.getString(R.string.move_owner) + "\"" + targetUser + "\"";
                     } else {
                         tipsMessage =
-                                operationUser + context.getString(R.string.move_owner) + "\"" + TUISearchConstants.covert2HTMLString(modifyInfo.getValue()) + "\"";
+                            operationUser + context.getString(R.string.move_owner) + "\"" + TUISearchConstants.covert2HTMLString(modifyInfo.getValue()) + "\"";
                     }
                 } else if (modifyType == V2TIMGroupChangeInfo.V2TIM_GROUP_INFO_CHANGE_TYPE_FACE_URL) {
                     msgInfo.setMsgType(MessageInfo.MSG_TYPE_GROUP_MODIFY_NOTICE);
@@ -462,7 +451,6 @@ public class MessageInfoUtil {
         msgInfo.setExtra(tipsMessage);
         return msgInfo;
     }
-
 
     private static MessageInfo createNormalMessageInfo(V2TIMMessage timMessage, Context context, int type) {
         final MessageInfo msgInfo = new MessageInfo();
@@ -520,7 +508,7 @@ public class MessageInfoUtil {
             String localPath = imageEle.getPath();
             if (msgInfo.isSelf() && !TextUtils.isEmpty(localPath) && new File(localPath).exists()) {
                 msgInfo.setDataPath(localPath);
-                int size[] = ImageUtil.getImageSize(localPath);
+                int[] size = ImageUtil.getImageSize(localPath);
                 msgInfo.setImgWidth(size[0]);
                 msgInfo.setImgHeight(size[1]);
             } else {
@@ -542,7 +530,7 @@ public class MessageInfoUtil {
         } else if (type == V2TIMMessage.V2TIM_ELEM_TYPE_VIDEO) {
             V2TIMVideoElem videoEle = timMessage.getVideoElem();
             if (msgInfo.isSelf() && !TextUtils.isEmpty(videoEle.getSnapshotPath())) {
-                int size[] = ImageUtil.getImageSize(videoEle.getSnapshotPath());
+                int[] size = ImageUtil.getImageSize(videoEle.getSnapshotPath());
                 msgInfo.setImgWidth(size[0]);
                 msgInfo.setImgHeight(size[1]);
                 msgInfo.setDataPath(videoEle.getSnapshotPath());
@@ -595,7 +583,7 @@ public class MessageInfoUtil {
             msgInfo.setDataPath(finalPath);
             msgInfo.setExtra(context.getString(R.string.file_extra));
         } else if (type == V2TIMMessage.V2TIM_ELEM_TYPE_MERGER) {
-            msgInfo.setExtra("[聊天记录]");
+            msgInfo.setExtra(context.getString(R.string.forward_extra));
         }
         msgInfo.setMsgType(convertTIMElemType2MessageInfoType(type));
         return msgInfo;
@@ -652,6 +640,8 @@ public class MessageInfoUtil {
                 return MessageInfo.MSG_TYPE_TIPS;
             case V2TIMMessage.V2TIM_ELEM_TYPE_MERGER:
                 return MessageInfo.MSG_TYPE_MERGE;
+            default:
+                break;
         }
 
         return -1;

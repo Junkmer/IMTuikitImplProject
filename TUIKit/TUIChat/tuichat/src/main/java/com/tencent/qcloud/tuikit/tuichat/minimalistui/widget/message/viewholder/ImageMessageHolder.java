@@ -16,15 +16,16 @@ import com.bumptech.glide.load.DataSource;
 import com.bumptech.glide.load.engine.GlideException;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
-import com.tencent.qcloud.tuicore.component.RoundCornerImageView;
-import com.tencent.qcloud.tuicore.component.imageEngine.impl.GlideEngine;
-import com.tencent.qcloud.tuicore.util.ImageUtil;
-import com.tencent.qcloud.tuicore.util.ScreenUtil;
+import com.tencent.qcloud.tuikit.timcommon.bean.TUIMessageBean;
+import com.tencent.qcloud.tuikit.timcommon.component.RoundCornerImageView;
+import com.tencent.qcloud.tuikit.timcommon.component.impl.GlideEngine;
+import com.tencent.qcloud.tuikit.timcommon.minimalistui.widget.message.MessageContentHolder;
+import com.tencent.qcloud.tuikit.timcommon.util.ImageUtil;
+import com.tencent.qcloud.tuikit.timcommon.util.ScreenUtil;
 import com.tencent.qcloud.tuikit.tuichat.R;
 import com.tencent.qcloud.tuikit.tuichat.TUIChatConstants;
 import com.tencent.qcloud.tuikit.tuichat.TUIChatService;
 import com.tencent.qcloud.tuikit.tuichat.bean.message.ImageMessageBean;
-import com.tencent.qcloud.tuikit.tuichat.bean.message.TUIMessageBean;
 import com.tencent.qcloud.tuikit.tuichat.component.imagevideoscan.ImageVideoScanActivity;
 import com.tencent.qcloud.tuikit.tuichat.util.TUIChatLog;
 import com.tencent.qcloud.tuikit.tuichat.util.TUIChatUtils;
@@ -34,7 +35,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ImageMessageHolder extends MessageContentHolder {
-
     protected static final int DEFAULT_MAX_SIZE = 540;
     protected static final int DEFAULT_RADIUS = 0;
     protected final List<String> downloadEles = new ArrayList<>();
@@ -106,8 +106,7 @@ public class ImageMessageHolder extends MessageContentHolder {
                     img.downloadImage(path, new ImageMessageBean.ImageBean.ImageDownloadCallback() {
                         @Override
                         public void onProgress(long currentSize, long totalSize) {
-                            TUIChatLog.i("downloadImage progress current:",
-                                    currentSize + ", total:" + totalSize);
+                            TUIChatLog.i("downloadImage progress current:", currentSize + ", total:" + totalSize);
                         }
 
                         @Override

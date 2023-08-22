@@ -1,27 +1,26 @@
 package com.tencent.qcloud.tuikit.tuichat.util;
 
+import static com.tencent.qcloud.tuicore.TUIConstants.TUIConversation.CONVERSATION_C2C_PREFIX;
+import static com.tencent.qcloud.tuicore.TUIConstants.TUIConversation.CONVERSATION_GROUP_PREFIX;
+
+import android.text.TextUtils;
+
 import com.tencent.imsdk.v2.V2TIMConversation;
 import com.tencent.imsdk.v2.V2TIMImageElem;
 import com.tencent.imsdk.v2.V2TIMManager;
 import com.tencent.imsdk.v2.V2TIMMessage;
-import com.tencent.qcloud.tuicore.component.interfaces.IUIKitCallback;
 import com.tencent.qcloud.tuicore.util.ErrorMessageConverter;
-import com.tencent.qcloud.tuicore.util.ImageUtil;
-import com.tencent.qcloud.tuikit.tuichat.bean.message.TUIMessageBean;
-import com.tencent.qcloud.tuikit.tuichat.component.face.FaceManager;
+import com.tencent.qcloud.tuikit.timcommon.bean.TUIMessageBean;
+import com.tencent.qcloud.tuikit.timcommon.component.face.FaceManager;
+import com.tencent.qcloud.tuikit.timcommon.component.interfaces.IUIKitCallback;
+import com.tencent.qcloud.tuikit.timcommon.util.ImageUtil;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import static com.tencent.qcloud.tuicore.TUIConstants.TUIConversation.CONVERSATION_C2C_PREFIX;
-import static com.tencent.qcloud.tuicore.TUIConstants.TUIConversation.CONVERSATION_GROUP_PREFIX;
-
-import android.text.TextUtils;
-
 public class TUIChatUtils {
-
     public static final String SPLIT_TEXT = "split_result";
     public static final String SPLIT_TEXT_FOR_TRANSLATION = "split_translation";
     public static final String SPLIT_TEXT_INDEX_FOR_TRANSLATION = "split_translation_index";
@@ -84,7 +83,7 @@ public class TUIChatUtils {
         String localImgPath = ChatMessageParser.getLocalImagePath(msg);
         if (localImgPath == null) {
             String originUUID = null;
-            for(V2TIMImageElem.V2TIMImage image : v2TIMImageElem.getImageList()) {
+            for (V2TIMImageElem.V2TIMImage image : v2TIMImageElem.getImageList()) {
                 if (image.getType() == V2TIMImageElem.V2TIM_IMAGE_TYPE_ORIGIN) {
                     originUUID = image.getUUID();
                     break;
@@ -99,13 +98,78 @@ public class TUIChatUtils {
         return localImgPath;
     }
 
+    public static String generateLargeImagePath(final TUIMessageBean msg) {
+        if (msg == null) {
+            return null;
+        }
+        V2TIMMessage v2TIMMessage = msg.getV2TIMMessage();
+        if (v2TIMMessage == null) {
+            return null;
+        }
+        V2TIMImageElem v2TIMImageElem = v2TIMMessage.getImageElem();
+        if (v2TIMImageElem == null) {
+            return null;
+        }
+
+        for (V2TIMImageElem.V2TIMImage image : v2TIMImageElem.getImageList()) {
+            if (image.getType() == V2TIMImageElem.V2TIM_IMAGE_TYPE_LARGE) {
+                String uuid = image.getUUID();
+                return ImageUtil.generateImagePath(uuid, V2TIMImageElem.V2TIM_IMAGE_TYPE_LARGE);
+            }
+        }
+        return null;
+    }
+
+    public static String generateOriginImagePath(final TUIMessageBean msg) {
+        if (msg == null) {
+            return null;
+        }
+        V2TIMMessage v2TIMMessage = msg.getV2TIMMessage();
+        if (v2TIMMessage == null) {
+            return null;
+        }
+        V2TIMImageElem v2TIMImageElem = v2TIMMessage.getImageElem();
+        if (v2TIMImageElem == null) {
+            return null;
+        }
+
+        for (V2TIMImageElem.V2TIMImage image : v2TIMImageElem.getImageList()) {
+            if (image.getType() == V2TIMImageElem.V2TIM_IMAGE_TYPE_ORIGIN) {
+                String uuid = image.getUUID();
+                return ImageUtil.generateImagePath(uuid, V2TIMImageElem.V2TIM_IMAGE_TYPE_ORIGIN);
+            }
+        }
+        return null;
+    }
+
+    public static String generateThumbImagePath(final TUIMessageBean msg) {
+        if (msg == null) {
+            return null;
+        }
+        V2TIMMessage v2TIMMessage = msg.getV2TIMMessage();
+        if (v2TIMMessage == null) {
+            return null;
+        }
+        V2TIMImageElem v2TIMImageElem = v2TIMMessage.getImageElem();
+        if (v2TIMImageElem == null) {
+            return null;
+        }
+
+        for (V2TIMImageElem.V2TIMImage image : v2TIMImageElem.getImageList()) {
+            if (image.getType() == V2TIMImageElem.V2TIM_IMAGE_TYPE_THUMB) {
+                String uuid = image.getUUID();
+                return ImageUtil.generateImagePath(uuid, V2TIMImageElem.V2TIM_IMAGE_TYPE_THUMB);
+            }
+        }
+        return null;
+    }
+
     public static boolean isCommunityGroup(String groupID) {
         if (TextUtils.isEmpty(groupID)) {
             return false;
         }
 
         return groupID.startsWith("@TGS#_");
-
     }
 
     public static boolean isTopicGroup(String groupID) {
@@ -115,7 +179,6 @@ public class TUIChatUtils {
         }
         return groupID.contains("@TOPIC#_");
     }
-
 
     public static String getGroupIDFromTopicID(String topicID) {
         // topicID 格式：@TGS#_xxxx@TOPIC#_xxxx
@@ -146,7 +209,6 @@ public class TUIChatUtils {
             return null;
         }
 
-        HashMap<String, List<String>> resultMap = new HashMap<>();
         List<String> result = new ArrayList<>();
         List<String> atUsers = new ArrayList<>();
         if (userList != null && userList.size() > 0) {
@@ -204,7 +266,7 @@ public class TUIChatUtils {
             int needTranslationIndex = Integer.valueOf(needTranslationTextIndexList.get(i));
             needTranslationTextList.add(result.get(needTranslationIndex));
         }
-
+        HashMap<String, List<String>> resultMap = new HashMap<>();
         resultMap.put(SPLIT_TEXT, result);
         resultMap.put(SPLIT_TEXT_FOR_TRANSLATION, needTranslationTextList);
         resultMap.put(SPLIT_TEXT_INDEX_FOR_TRANSLATION, needTranslationTextIndexList);

@@ -6,11 +6,11 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.tencent.qcloud.tuicore.TUIThemeManager;
+import com.tencent.qcloud.tuikit.timcommon.bean.TUIMessageBean;
+import com.tencent.qcloud.tuikit.timcommon.minimalistui.widget.message.MessageContentHolder;
 import com.tencent.qcloud.tuikit.tuichat.R;
 import com.tencent.qcloud.tuikit.tuichat.TUIChatService;
 import com.tencent.qcloud.tuikit.tuichat.bean.message.CustomLinkMessageBean;
-import com.tencent.qcloud.tuikit.tuichat.bean.message.TUIMessageBean;
-
 
 public class CustomLinkMessageHolder extends MessageContentHolder {
     private TextView textView;
@@ -40,11 +40,15 @@ public class CustomLinkMessageHolder extends MessageContentHolder {
         }
 
         if (!msg.isSelf()) {
-            textView.setTextColor(textView.getResources().getColor(TUIThemeManager.getAttrResId(textView.getContext(), R.attr.chat_other_custom_msg_text_color)));
-            linkView.setTextColor(textView.getResources().getColor(TUIThemeManager.getAttrResId(textView.getContext(), R.attr.chat_other_custom_msg_link_color)));
+            textView.setTextColor(
+                textView.getResources().getColor(TUIThemeManager.getAttrResId(textView.getContext(), R.attr.chat_other_custom_msg_text_color)));
+            linkView.setTextColor(
+                textView.getResources().getColor(TUIThemeManager.getAttrResId(textView.getContext(), R.attr.chat_other_custom_msg_link_color)));
         } else {
-            textView.setTextColor(textView.getResources().getColor(TUIThemeManager.getAttrResId(textView.getContext(), R.attr.chat_self_custom_msg_text_color)));
-            linkView.setTextColor(textView.getResources().getColor(TUIThemeManager.getAttrResId(textView.getContext(), R.attr.chat_self_custom_msg_link_color)));
+            textView.setTextColor(
+                textView.getResources().getColor(TUIThemeManager.getAttrResId(textView.getContext(), R.attr.chat_self_custom_msg_text_color)));
+            linkView.setTextColor(
+                textView.getResources().getColor(TUIThemeManager.getAttrResId(textView.getContext(), R.attr.chat_self_custom_msg_link_color)));
         }
 
         textView.setText(text);
@@ -55,12 +59,11 @@ public class CustomLinkMessageHolder extends MessageContentHolder {
             public void onClick(View v) {
                 Intent intent = new Intent();
                 intent.setAction("android.intent.action.VIEW");
-                Uri content_url = Uri.parse(finalLink);
-                intent.setData(content_url);
+                Uri contentUrl = Uri.parse(finalLink);
+                intent.setData(contentUrl);
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 TUIChatService.getAppContext().startActivity(intent);
             }
         });
-
     }
 }

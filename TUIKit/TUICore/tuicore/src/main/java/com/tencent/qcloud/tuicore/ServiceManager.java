@@ -4,6 +4,7 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import com.tencent.qcloud.tuicore.interfaces.ITUIService;
+import com.tencent.qcloud.tuicore.interfaces.TUIServiceCallback;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -55,6 +56,17 @@ class ServiceManager {
         ITUIService service = serviceMap.get(serviceName);
         if (service != null) {
             return service.onCall(method, param);
+        } else {
+            Log.w(TAG, "can't find service : " + serviceName);
+            return null;
+        }
+    }
+
+    public Object callService(String serviceName, String method, Map<String, Object> param, TUIServiceCallback callback) {
+        Log.i(TAG, "callService : " + serviceName + " method : " + method);
+        ITUIService service = serviceMap.get(serviceName);
+        if (service != null) {
+            return service.onCall(method, param, callback);
         } else {
             Log.w(TAG, "can't find service : " + serviceName);
             return null;

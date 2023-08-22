@@ -1,14 +1,11 @@
 package com.tencent.qcloud.tuikit.tuiconversation.minimalistui.util;
 
 import android.os.Bundle;
-
 import com.tencent.imsdk.v2.V2TIMConversation;
 import com.tencent.qcloud.tuicore.TUIConstants;
 import com.tencent.qcloud.tuicore.TUICore;
 import com.tencent.qcloud.tuikit.tuiconversation.bean.ConversationInfo;
-
 import java.io.Serializable;
-import java.util.ArrayList;
 
 public class TUIConversationUtils {
     public static void startChatActivity(ConversationInfo conversationInfo) {

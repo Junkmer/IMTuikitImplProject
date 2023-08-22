@@ -2,17 +2,15 @@ package com.tencent.qcloud.tuikit.tuiconversation.minimalistui.page;
 
 import android.content.Intent;
 import android.os.Bundle;
-
 import androidx.annotation.Nullable;
-
-import com.tencent.qcloud.tuicore.component.activities.BaseLightActivity;
+import androidx.appcompat.app.AppCompatActivity;
 import com.tencent.qcloud.tuikit.tuiconversation.R;
 import com.tencent.qcloud.tuikit.tuiconversation.commonutil.TUIConversationLog;
 
-public class TUIForwardSelectMinimalistActivity extends BaseLightActivity {
+public class TUIForwardSelectMinimalistActivity extends AppCompatActivity {
     private static final String TAG = TUIForwardSelectMinimalistActivity.class.getSimpleName();
 
-    private TUIForwardSelectMinimalistFragment mTUIForwardSelectMinimalistFragment;
+    private TUIForwardSelectMinimalistFragment forwardSelectMinimalistFragment;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -25,7 +23,8 @@ public class TUIForwardSelectMinimalistActivity extends BaseLightActivity {
     @Override
     protected void onNewIntent(Intent intent) {
         TUIConversationLog.i(TAG, "onNewIntent");
-        super.onNewIntent(intent);;
+        super.onNewIntent(intent);
+        ;
     }
 
     @Override
@@ -35,8 +34,7 @@ public class TUIForwardSelectMinimalistActivity extends BaseLightActivity {
     }
 
     private void init() {
-        mTUIForwardSelectMinimalistFragment = new TUIForwardSelectMinimalistFragment();
-        getSupportFragmentManager().beginTransaction().replace(R.id.empty_view, mTUIForwardSelectMinimalistFragment).commitAllowingStateLoss();
-
+        forwardSelectMinimalistFragment = new TUIForwardSelectMinimalistFragment();
+        getSupportFragmentManager().beginTransaction().replace(R.id.empty_view, forwardSelectMinimalistFragment).commitAllowingStateLoss();
     }
 }

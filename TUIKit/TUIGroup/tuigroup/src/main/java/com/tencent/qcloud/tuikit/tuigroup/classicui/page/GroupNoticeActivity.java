@@ -10,19 +10,17 @@ import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
-
-import com.tencent.qcloud.tuicore.component.TitleBarLayout;
-import com.tencent.qcloud.tuicore.component.activities.BaseLightActivity;
-import com.tencent.qcloud.tuicore.component.interfaces.ITitleBarLayout;
-import com.tencent.qcloud.tuicore.component.interfaces.IUIKitCallback;
 import com.tencent.qcloud.tuicore.util.ToastUtil;
+import com.tencent.qcloud.tuikit.timcommon.component.TitleBarLayout;
+import com.tencent.qcloud.tuikit.timcommon.component.activities.BaseLightActivity;
+import com.tencent.qcloud.tuikit.timcommon.component.interfaces.ITitleBarLayout;
+import com.tencent.qcloud.tuikit.timcommon.component.interfaces.IUIKitCallback;
 import com.tencent.qcloud.tuikit.tuigroup.R;
 import com.tencent.qcloud.tuikit.tuigroup.TUIGroupConstants;
 import com.tencent.qcloud.tuikit.tuigroup.bean.GroupInfo;
 import com.tencent.qcloud.tuikit.tuigroup.presenter.GroupManagerPresenter;
 
 public class GroupNoticeActivity extends BaseLightActivity {
-
     private static OnGroupNoticeChangedListener changedListener;
 
     private EditText editText;
@@ -134,7 +132,7 @@ public class GroupNoticeActivity extends BaseLightActivity {
     // 兼容有导航键的情况
     private int getNavigateBarHeight() {
         DisplayMetrics metrics = new DisplayMetrics();
-        WindowManager windowManager  = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
+        WindowManager windowManager = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
         windowManager.getDefaultDisplay().getMetrics(metrics);
         int usableHeight = metrics.heightPixels;
         windowManager.getDefaultDisplay().getRealMetrics(metrics);

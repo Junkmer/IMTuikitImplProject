@@ -2,11 +2,11 @@ package com.tencent.qcloud.tuikit.tuichat;
 
 import android.content.Context;
 import android.text.TextUtils;
+import android.util.Log;
 
 import androidx.datastore.preferences.core.Preferences;
 import androidx.datastore.preferences.rxjava3.RxPreferenceDataStoreBuilder;
 import androidx.datastore.rxjava3.RxDataStore;
-
 import com.tencent.imsdk.v2.V2TIMAdvancedMsgListener;
 import com.tencent.imsdk.v2.V2TIMFriendInfo;
 import com.tencent.imsdk.v2.V2TIMFriendshipListener;
@@ -18,18 +18,18 @@ import com.tencent.qcloud.tuicore.ServiceInitializer;
 import com.tencent.qcloud.tuicore.TUIConstants;
 import com.tencent.qcloud.tuicore.TUICore;
 import com.tencent.qcloud.tuicore.TUILogin;
-import com.tencent.qcloud.tuikit.tuichat.bean.MessageReceiptInfo;
+import com.tencent.qcloud.tuikit.timcommon.bean.MessageReceiptInfo;
+import com.tencent.qcloud.tuikit.timcommon.bean.TUIMessageBean;
+import com.tencent.qcloud.tuikit.timcommon.component.face.FaceManager;
 import com.tencent.qcloud.tuikit.tuichat.bean.message.CustomEvaluationMessageBean;
 import com.tencent.qcloud.tuikit.tuichat.bean.message.CustomLinkMessageBean;
 import com.tencent.qcloud.tuikit.tuichat.bean.message.CustomOrderMessageBean;
 import com.tencent.qcloud.tuikit.tuichat.bean.message.MessageTypingBean;
-import com.tencent.qcloud.tuikit.tuichat.bean.message.TUIMessageBean;
-import com.tencent.qcloud.tuikit.tuichat.component.face.FaceManager;
 import com.tencent.qcloud.tuikit.tuichat.config.TUIChatConfigs;
-import com.tencent.qcloud.tuikit.tuichat.interfaces.AudioRecordEventListener;
 import com.tencent.qcloud.tuikit.tuichat.interfaces.C2CChatEventListener;
 import com.tencent.qcloud.tuikit.tuichat.interfaces.GroupChatEventListener;
 import com.tencent.qcloud.tuikit.tuichat.interfaces.IBaseMessageSender;
+import com.tencent.qcloud.tuikit.tuichat.interfaces.IMessageRecyclerView;
 import com.tencent.qcloud.tuikit.tuichat.interfaces.NetworkConnectionListener;
 import com.tencent.qcloud.tuikit.tuichat.interfaces.TotalUnreadCountListener;
 import com.tencent.qcloud.tuikit.tuichat.util.ChatMessageBuilder;
@@ -37,13 +37,14 @@ import com.tencent.qcloud.tuikit.tuichat.util.ChatMessageParser;
 import com.tencent.qcloud.tuikit.tuichat.util.DataStoreUtil;
 import com.tencent.qcloud.tuikit.tuichat.util.TUIChatLog;
 import com.tencent.qcloud.tuikit.tuichat.util.TUIChatUtils;
-
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class TUIChatService extends ServiceInitializer implements ITUIChatService {
     public static final String TAG = TUIChatService.class.getSimpleName();
@@ -64,8 +65,7 @@ public class TUIChatService extends ServiceInitializer implements ITUIChatServic
     private final List<WeakReference<NetworkConnectionListener>> connectListenerList = new ArrayList<>();
 
     private final Map<String, Class<? extends TUIMessageBean>> customMessageMap = new HashMap<>();
-    private final List<WeakReference<AudioRecordEventListener>> audioRecordEventListenerList = new ArrayList<>();
-
+    private final Set<Class<? extends TUIMessageBean>> extensionMessageClass = new HashSet<>();
     private RxDataStore<Preferences> mChatDataStore = null;
 
     @Override
@@ -88,7 +88,7 @@ public class TUIChatService extends ServiceInitializer implements ITUIChatServic
         }
         DataStoreUtil.getInstance().setDataStore(mChatDataStore);
     }
-    
+
     public RxDataStore<Preferences> getChatDataStore() {
         return mChatDataStore;
     }
@@ -107,9 +107,11 @@ public class TUIChatService extends ServiceInitializer implements ITUIChatServic
         TUICore.registerEvent(TUIConstants.TUIConversation.EVENT_UNREAD, TUIConstants.TUIConversation.EVENT_SUB_KEY_UNREAD_CHANGED, this);
         TUICore.registerEvent(TUIConstants.TUILogin.EVENT_LOGIN_STATE_CHANGED, TUIConstants.TUILogin.EVENT_SUB_KEY_USER_LOGIN_SUCCESS, this);
         TUICore.registerEvent(TUIChatConstants.EVENT_KEY_MESSAGE_STATUS_CHANGED, TUIChatConstants.EVENT_SUB_KEY_MESSAGE_SEND, this);
-        TUICore.registerEvent(TUIConstants.TUICalling.EVENT_KEY_RECORD_AUDIO_MESSAGE, TUIConstants.TUICalling.EVENT_SUB_KEY_RECORD_START, this);
-        TUICore.registerEvent(TUIConstants.TUICalling.EVENT_KEY_RECORD_AUDIO_MESSAGE, TUIConstants.TUICalling.EVENT_SUB_KEY_RECORD_STOP, this);
         TUICore.registerEvent(TUIChatConstants.EVENT_KEY_OFFLINE_MESSAGE_PRIVATE_RING, TUIChatConstants.EVENT_SUB_KEY_OFFLINE_MESSAGE_PRIVATE_RING, this);
+        TUICore.registerEvent(
+            TUIConstants.TUITranslationPlugin.EVENT_KEY_TRANSLATION_EVENT, TUIConstants.TUITranslationPlugin.EVENT_SUB_KEY_TRANSLATION_CHANGED, this);
+        TUICore.registerEvent(TUIConstants.TUIGroup.Event.GroupApplication.KEY_GROUP_APPLICATION,
+            TUIConstants.TUIGroup.Event.GroupApplication.SUB_KEY_GROUP_APPLICATION_NUM_CHANGED, this);
     }
 
     @Override
@@ -123,7 +125,7 @@ public class TUIChatService extends ServiceInitializer implements ITUIChatServic
             IBaseMessageSender messageSender = getMessageSender();
             if (messageSender != null) {
                 TUIMessageBean message = ChatMessageBuilder.buildCustomMessage(content, description, extension.getBytes());
-                messageSender.sendMessage(message, chatId, TUIChatUtils.isGroupChat(chatType));
+                return messageSender.sendMessage(message, chatId, TUIChatUtils.isGroupChat(chatType));
             }
         } else if (TextUtils.equals(TUIConstants.TUIChat.METHOD_EXIT_CHAT, method)) {
             String chatId = (String) param.get(TUIConstants.TUIChat.CHAT_ID);
@@ -131,7 +133,7 @@ public class TUIChatService extends ServiceInitializer implements ITUIChatServic
             if (isGroupChat) {
                 List<GroupChatEventListener> groupChatEventListenerList = getGroupChatEventListenerList();
                 for (GroupChatEventListener groupChatEventListener : groupChatEventListenerList) {
-                        groupChatEventListener.exitGroupChat(chatId);
+                    groupChatEventListener.exitGroupChat(chatId);
                 }
             } else {
                 List<C2CChatEventListener> c2CChatEventListenerList = getC2CChatEventListenerList();
@@ -161,20 +163,23 @@ public class TUIChatService extends ServiceInitializer implements ITUIChatServic
                     c2CChatEventListener.addMessage(messageBean, chatId);
                 }
             }
-        } else if (TextUtils.equals(TUIConstants.TUIChat.METHOD_GROUP_APPLICAITON_PROCESSED, method)) {
-            int number = (int) param.get(TUIConstants.TUIChat.GROUP_APPLY_NUM);
-            boolean isGroupChat = (boolean) param.get(TUIConstants.TUIChat.IS_GROUP_CHAT);
-            if (isGroupChat) {
-                List<GroupChatEventListener> groupChatEventListenerList = getGroupChatEventListenerList();
-                for (GroupChatEventListener groupChatEventListener : groupChatEventListenerList) {
-                    groupChatEventListener.onApplied(number);
-                }
-            }
         } else if (TextUtils.equals(TUIConstants.TUIChat.METHOD_UPDATE_DATA_STORE_CHAT_URI, method)) {
             String uri = (String) param.get(TUIConstants.TUIChat.CHAT_BACKGROUND_URI);
             String chatId = (String) param.get(TUIConstants.TUIChat.CHAT_ID);
             if (!TextUtils.isEmpty(uri)) {
                 DataStoreUtil.getInstance().putValue(chatId, uri);
+            }
+        } else if (TextUtils.equals(TUIConstants.TUIChat.METHOD_SET_CHAT_EXTENSION, method)) {
+            for (Map.Entry<String, Object> entry : param.entrySet()) {
+                String key = entry.getKey();
+                Object value = entry.getValue();
+                if (TextUtils.equals(key, TUIConstants.TUIChat.ENABLE_VIDEO_CALL)) {
+                    TUIChatConfigs.getConfigs().getGeneralConfig().setEnableVideoCall((Boolean) value);
+                } else if (TextUtils.equals(key, TUIConstants.TUIChat.ENABLE_AUDIO_CALL)) {
+                    TUIChatConfigs.getConfigs().getGeneralConfig().setEnableVoiceCall((Boolean) value);
+                } else if (TextUtils.equals(key, TUIConstants.TUIChat.ENABLE_LINK)) {
+                    TUIChatConfigs.getConfigs().getGeneralConfig().setEnableWelcomeCustomMessage((Boolean) value);
+                }
             }
         }
         return null;
@@ -183,144 +188,187 @@ public class TUIChatService extends ServiceInitializer implements ITUIChatServic
     @Override
     public void onNotifyEvent(String key, String subKey, Map<String, Object> param) {
         if (TextUtils.equals(key, TUIConstants.TUIGroup.EVENT_GROUP)) {
-            if (TextUtils.equals(subKey, TUIConstants.TUIGroup.EVENT_SUB_KEY_EXIT_GROUP)
-                    || TextUtils.equals(subKey, TUIConstants.TUIGroup.EVENT_SUB_KEY_GROUP_DISMISS)
-                    || TextUtils.equals(subKey, TUIConstants.TUIGroup.EVENT_SUB_KEY_GROUP_RECYCLE)) {
-                List<GroupChatEventListener> groupChatEventListenerList = getGroupChatEventListenerList();
-                String groupId = null;
-                if (param != null) {
-                    groupId = (String) getOrDefault(param.get(TUIConstants.TUIGroup.GROUP_ID), "");
-                }
-                for(GroupChatEventListener groupChatEventListener : groupChatEventListenerList) {
-                    groupChatEventListener.onGroupForceExit(groupId);
-                }
-            } else if (TextUtils.equals(subKey, TUIConstants.TUIGroup.EVENT_SUB_KEY_GROUP_INFO_CHANGED)) {
-                if (param == null) {
-                    return;
-                }
-                String newGroupName = (String) getOrDefault(param.get(TUIConstants.TUIGroup.GROUP_NAME), null);
-                String groupId = (String) getOrDefault(param.get(TUIConstants.TUIGroup.GROUP_ID), "");
-                String groupFaceUrl = (String) getOrDefault(param.get(TUIConstants.TUIGroup.GROUP_FACE_URL), null);
-
-
-                if (TextUtils.isEmpty(groupId)) {
-                    return;
-                }
-                if (!TextUtils.isEmpty(newGroupName)) {
-                    List<GroupChatEventListener> groupChatEventListenerList = getGroupChatEventListenerList();
-                    for (GroupChatEventListener groupChatEventListener : groupChatEventListenerList) {
-                        groupChatEventListener.onGroupNameChanged(groupId, newGroupName);
-                    }
-                }
-                if (!TextUtils.isEmpty(groupFaceUrl)) {
-                    List<GroupChatEventListener> groupChatEventListenerList = getGroupChatEventListenerList();
-                    for (GroupChatEventListener groupChatEventListener : groupChatEventListenerList) {
-                        groupChatEventListener.onGroupFaceUrlChanged(groupId, groupFaceUrl);
-                    }
-                }
-            } else if (TextUtils.equals(subKey, TUIConstants.TUIGroup.EVENT_SUB_KEY_MEMBER_KICKED_GROUP)) {
-                if (param == null) {
-                    return;
-                }
-                String groupId = (String) getOrDefault(param.get(TUIConstants.TUIGroup.GROUP_ID), "");
-                ArrayList<String> memberList = (ArrayList<String>) param.get(TUIConstants.TUIGroup.GROUP_MEMBER_ID_LIST);
-                if (TextUtils.isEmpty(groupId) || memberList == null || memberList.isEmpty()) {
-                    return;
-                }
-                String selfId = TUILogin.getLoginUser();
-                if (memberList.contains(selfId)) {
-                    List<GroupChatEventListener> groupChatEventListenerList = getGroupChatEventListenerList();
-                    for(GroupChatEventListener groupChatEventListener : groupChatEventListenerList) {
-                        groupChatEventListener.onGroupForceExit(groupId);
-                    }
-                }
-            } else if (TextUtils.equals(subKey, TUIConstants.TUIGroup.EVENT_SUB_KEY_CLEAR_MESSAGE)) {
-                String groupId = (String) getOrDefault(param.get(TUIConstants.TUIGroup.GROUP_ID), "");
-                List<GroupChatEventListener> groupChatEventListenerList = getGroupChatEventListenerList();
-                for(GroupChatEventListener groupChatEventListener : groupChatEventListenerList) {
-                    groupChatEventListener.clearGroupMessage(groupId);
-                }
-            }
+            handleGroupEvent(subKey, param);
         } else if (key.equals(TUIConstants.TUIContact.EVENT_USER)) {
-            if (subKey.equals(TUIConstants.TUIContact.EVENT_SUB_KEY_CLEAR_MESSAGE)) {
-                if (param == null || param.isEmpty()) {
-                    return;
-                }
-                String userID = (String) getOrDefault(param.get(TUIConstants.TUIContact.FRIEND_ID), "");
-                List<C2CChatEventListener> c2CChatEventListenerList = getC2CChatEventListenerList();
-                for(C2CChatEventListener c2CChatEventListener : c2CChatEventListenerList) {
-                    c2CChatEventListener.clearC2CMessage(userID);
-                }
-            }
+            handleContactUserEvent(subKey, param);
         } else if (key.equals(TUIConstants.TUIContact.EVENT_FRIEND_INFO_CHANGED)) {
-            if (subKey.equals(TUIConstants.TUIContact.EVENT_SUB_KEY_FRIEND_REMARK_CHANGED)) {
-                if (param == null || param.isEmpty()) {
-                    return;
-                }
-                String id = (String) param.get(TUIConstants.TUIContact.FRIEND_ID);
-                String remark = (String) param.get(TUIConstants.TUIContact.FRIEND_REMARK);
-                List<C2CChatEventListener> c2CChatEventListenerList = getC2CChatEventListenerList();
-                for(C2CChatEventListener c2CChatEventListener : c2CChatEventListenerList) {
-                    c2CChatEventListener.onFriendNameChanged(id, remark);
-                }
-            }
+            handleFriendInfChangedEvent(subKey, param);
         } else if (key.equals(TUIConstants.TUIConversation.EVENT_UNREAD)) {
-            if (subKey.equals(TUIConstants.TUIConversation.EVENT_SUB_KEY_UNREAD_CHANGED)) {
-                long unreadCount = (long) param.get(TUIConstants.TUIConversation.TOTAL_UNREAD_COUNT);
-                List<TotalUnreadCountListener> totalUnreadCountListenerList = getUnreadCountListenerList();
-                for (TotalUnreadCountListener totalUnreadCountListener : totalUnreadCountListenerList) {
-                    totalUnreadCountListener.onTotalUnreadCountChanged(unreadCount);
-                }
-            }
+            handleUnreadChangedEvent(subKey, param);
         } else if (TextUtils.equals(key, TUIConstants.TUILogin.EVENT_LOGIN_STATE_CHANGED)) {
-            if (TextUtils.equals(subKey, TUIConstants.TUILogin.EVENT_SUB_KEY_USER_LOGIN_SUCCESS)) {
-                // 加载默认 emoji 小表情
-                // load default emojis
-                FaceManager.loadEmojis();
-                // 设置音视频通话的悬浮窗是否开启
-                // Set whether to open the floating window for voice and video calls
-                Map<String, Object> enableFloatWindowParam = new HashMap<>();
-                enableFloatWindowParam.put(TUIConstants.TUICalling.PARAM_NAME_ENABLE_FLOAT_WINDOW, TUIChatConfigs.getConfigs().getGeneralConfig().isEnableFloatWindowForCall());
-                TUICore.callService(TUIConstants.TUICalling.SERVICE_NAME, TUIConstants.TUICalling.METHOD_NAME_ENABLE_FLOAT_WINDOW, enableFloatWindowParam);
-
-                // 设置音视频通话开启多端登录功能
-                // Set Whether to enable multi-terminal login function for audio and video calls
-                Map<String, Object> enableMultiDeviceParam = new HashMap<>();
-                enableMultiDeviceParam.put(TUIConstants.TUICalling.PARAM_NAME_ENABLE_MULTI_DEVICE, TUIChatConfigs.getConfigs().getGeneralConfig().isEnableMultiDeviceForCall());
-                TUICore.callService(TUIConstants.TUICalling.SERVICE_NAME, TUIConstants.TUICalling.METHOD_NAME_ENABLE_MULTI_DEVICE, enableMultiDeviceParam);
-            }
+            handleLoginStatusEvent(subKey);
         } else if (TextUtils.equals(key, TUIChatConstants.EVENT_KEY_MESSAGE_STATUS_CHANGED)) {
-            if (TextUtils.equals(subKey, TUIChatConstants.EVENT_SUB_KEY_MESSAGE_SEND)) {
-                Object msgBeanObj = param.get(TUIChatConstants.MESSAGE_BEAN);
-                if (msgBeanObj instanceof TUIMessageBean) {
-                    List<GroupChatEventListener> groupChatEventListenerList = getGroupChatEventListenerList();
-                    for (GroupChatEventListener groupChatEventListener : groupChatEventListenerList) {
-                        groupChatEventListener.onMessageChanged((TUIMessageBean) msgBeanObj);
-                    }
-                    List<C2CChatEventListener> c2CChatEventListenerList = getC2CChatEventListenerList();
-                    for (C2CChatEventListener c2CChatEventListener : c2CChatEventListenerList) {
-                        c2CChatEventListener.onMessageChanged((TUIMessageBean) msgBeanObj);
-                    }
+            handleMessageStatusChangedEvent(subKey, param);
+        } else if (TextUtils.equals(key, TUIChatConstants.EVENT_KEY_OFFLINE_MESSAGE_PRIVATE_RING)) {
+            handleOfflineRingEvent(subKey, param);
+        } else if (TextUtils.equals(key, TUIConstants.TUITranslationPlugin.EVENT_KEY_TRANSLATION_EVENT)) {
+            handleTranslationEvent(subKey, param);
+        } else if (TextUtils.equals(TUIConstants.TUIGroup.Event.GroupApplication.KEY_GROUP_APPLICATION, key)) {
+            handleGroupApplicationEvent(subKey, param);
+        }
+    }
+
+    private void handleOfflineRingEvent(String subKey, Map<String, Object> param) {
+        if (TextUtils.equals(subKey, TUIChatConstants.EVENT_SUB_KEY_OFFLINE_MESSAGE_PRIVATE_RING)) {
+            Boolean isPrivateRing = (Boolean) param.get(TUIChatConstants.OFFLINE_MESSAGE_PRIVATE_RING);
+            TUIChatConfigs.getConfigs().getGeneralConfig().setAndroidPrivateRing(isPrivateRing);
+        }
+    }
+
+    private void handleMessageStatusChangedEvent(String subKey, Map<String, Object> param) {
+        if (TextUtils.equals(subKey, TUIChatConstants.EVENT_SUB_KEY_MESSAGE_SEND)) {
+            Object msgBeanObj = param.get(TUIChatConstants.MESSAGE_BEAN);
+            if (msgBeanObj instanceof TUIMessageBean) {
+                List<GroupChatEventListener> groupChatEventListenerList = getGroupChatEventListenerList();
+                for (GroupChatEventListener groupChatEventListener : groupChatEventListenerList) {
+                    groupChatEventListener.onMessageChanged((TUIMessageBean) msgBeanObj, IMessageRecyclerView.DATA_CHANGE_TYPE_UPDATE);
+                }
+                List<C2CChatEventListener> c2CChatEventListenerList = getC2CChatEventListenerList();
+                for (C2CChatEventListener c2CChatEventListener : c2CChatEventListenerList) {
+                    c2CChatEventListener.onMessageChanged((TUIMessageBean) msgBeanObj, IMessageRecyclerView.DATA_CHANGE_TYPE_UPDATE);
                 }
             }
-        } else if (TextUtils.equals(key, TUIConstants.TUICalling.EVENT_KEY_RECORD_AUDIO_MESSAGE)) {
+        }
+    }
+
+    private void handleUnreadChangedEvent(String subKey, Map<String, Object> param) {
+        if (subKey.equals(TUIConstants.TUIConversation.EVENT_SUB_KEY_UNREAD_CHANGED)) {
+            long unreadCount = (long) param.get(TUIConstants.TUIConversation.TOTAL_UNREAD_COUNT);
+            List<TotalUnreadCountListener> totalUnreadCountListenerList = getUnreadCountListenerList();
+            for (TotalUnreadCountListener totalUnreadCountListener : totalUnreadCountListenerList) {
+                totalUnreadCountListener.onTotalUnreadCountChanged(unreadCount);
+            }
+        }
+    }
+
+    private void handleFriendInfChangedEvent(String subKey, Map<String, Object> param) {
+        if (subKey.equals(TUIConstants.TUIContact.EVENT_SUB_KEY_FRIEND_REMARK_CHANGED)) {
+            if (param == null || param.isEmpty()) {
+                return;
+            }
+            String id = (String) param.get(TUIConstants.TUIContact.FRIEND_ID);
+            String remark = (String) param.get(TUIConstants.TUIContact.FRIEND_REMARK);
+            List<C2CChatEventListener> c2CChatEventListenerList = getC2CChatEventListenerList();
+            for (C2CChatEventListener c2CChatEventListener : c2CChatEventListenerList) {
+                c2CChatEventListener.onFriendNameChanged(id, remark);
+            }
+        }
+    }
+
+    private void handleContactUserEvent(String subKey, Map<String, Object> param) {
+        if (subKey.equals(TUIConstants.TUIContact.EVENT_SUB_KEY_CLEAR_MESSAGE)) {
+            if (param == null || param.isEmpty()) {
+                return;
+            }
+            String userID = (String) getOrDefault(param.get(TUIConstants.TUIContact.FRIEND_ID), "");
+            List<C2CChatEventListener> c2CChatEventListenerList = getC2CChatEventListenerList();
+            for (C2CChatEventListener c2CChatEventListener : c2CChatEventListenerList) {
+                c2CChatEventListener.clearC2CMessage(userID);
+            }
+        }
+    }
+
+    private void handleTranslationEvent(String subKey, Map<String, Object> param) {
+        if (TextUtils.equals(subKey, TUIConstants.TUITranslationPlugin.EVENT_SUB_KEY_TRANSLATION_CHANGED)) {
+            TUIMessageBean messageBean = (TUIMessageBean) param.get(TUIConstants.TUIChat.MESSAGE_BEAN);
+            int dataChangeType = (int) param.get(TUIChatConstants.DATA_CHANGE_TYPE);
+            List<C2CChatEventListener> c2CChatEventListenerList = getInstance().getC2CChatEventListenerList();
+            for (C2CChatEventListener c2CChatEventListener : c2CChatEventListenerList) {
+                c2CChatEventListener.onMessageChanged(messageBean, dataChangeType);
+            }
+            List<GroupChatEventListener> groupChatEventListenerList = getInstance().getGroupChatEventListenerList();
+            for (GroupChatEventListener groupChatEventListener : groupChatEventListenerList) {
+                groupChatEventListener.onMessageChanged(messageBean, dataChangeType);
+            }
+        }
+    }
+
+    private void handleLoginStatusEvent(String subKey) {
+        if (TextUtils.equals(subKey, TUIConstants.TUILogin.EVENT_SUB_KEY_USER_LOGIN_SUCCESS)) {
+            // 加载默认 emoji 小表情
+            // load default emojis
+            FaceManager.loadEmojis();
+            // 设置音视频通话的悬浮窗是否开启
+            // Set whether to open the floating window for voice and video calls
+            Map<String, Object> enableFloatWindowParam = new HashMap<>();
+            enableFloatWindowParam.put(
+                TUIConstants.TUICalling.PARAM_NAME_ENABLE_FLOAT_WINDOW, TUIChatConfigs.getConfigs().getGeneralConfig().isEnableFloatWindowForCall());
+            TUICore.callService(TUIConstants.TUICalling.SERVICE_NAME, TUIConstants.TUICalling.METHOD_NAME_ENABLE_FLOAT_WINDOW, enableFloatWindowParam);
+
+            // 设置音视频通话开启多端登录功能
+            // Set Whether to enable multi-terminal login function for audio and video calls
+            Map<String, Object> enableMultiDeviceParam = new HashMap<>();
+            enableMultiDeviceParam.put(
+                TUIConstants.TUICalling.PARAM_NAME_ENABLE_MULTI_DEVICE, TUIChatConfigs.getConfigs().getGeneralConfig().isEnableMultiDeviceForCall());
+            TUICore.callService(TUIConstants.TUICalling.SERVICE_NAME, TUIConstants.TUICalling.METHOD_NAME_ENABLE_MULTI_DEVICE, enableMultiDeviceParam);
+        }
+    }
+
+    private void handleGroupEvent(String subKey, Map<String, Object> param) {
+        if (TextUtils.equals(subKey, TUIConstants.TUIGroup.EVENT_SUB_KEY_EXIT_GROUP)
+            || TextUtils.equals(subKey, TUIConstants.TUIGroup.EVENT_SUB_KEY_GROUP_DISMISS)
+            || TextUtils.equals(subKey, TUIConstants.TUIGroup.EVENT_SUB_KEY_GROUP_RECYCLE)) {
+            List<GroupChatEventListener> groupChatEventListenerList = getGroupChatEventListenerList();
+            String groupId = null;
+            if (param != null) {
+                groupId = (String) getOrDefault(param.get(TUIConstants.TUIGroup.GROUP_ID), "");
+            }
+            for (GroupChatEventListener groupChatEventListener : groupChatEventListenerList) {
+                groupChatEventListener.onGroupForceExit(groupId);
+            }
+        } else if (TextUtils.equals(subKey, TUIConstants.TUIGroup.EVENT_SUB_KEY_GROUP_INFO_CHANGED)) {
             if (param == null) {
                 return;
             }
+            String newGroupName = (String) getOrDefault(param.get(TUIConstants.TUIGroup.GROUP_NAME), null);
+            String groupId = (String) getOrDefault(param.get(TUIConstants.TUIGroup.GROUP_ID), "");
+            String groupFaceUrl = (String) getOrDefault(param.get(TUIConstants.TUIGroup.GROUP_FACE_URL), null);
 
-            int errorCode = (int) getOrDefault(param.get("errorCode"), TUIConstants.TUICalling.ERROR_INVALID_PARAM);
-            String path = (String) getOrDefault(param.get(TUIConstants.TUICalling.PARAM_NAME_AUDIO_PATH), "");
-            for (AudioRecordEventListener audioRecordEventListener : getAudioRecordEventListenerList()) {
-                if (TextUtils.equals(subKey, TUIConstants.TUICalling.EVENT_SUB_KEY_RECORD_START)) {
-                    audioRecordEventListener.onRecordBegin(errorCode, path);
-                } else if (TextUtils.equals(subKey, TUIConstants.TUICalling.EVENT_SUB_KEY_RECORD_STOP)) {
-                    audioRecordEventListener.onRecordComplete(errorCode, path);
+            if (TextUtils.isEmpty(groupId)) {
+                return;
+            }
+            if (!TextUtils.isEmpty(newGroupName)) {
+                List<GroupChatEventListener> groupChatEventListenerList = getGroupChatEventListenerList();
+                for (GroupChatEventListener groupChatEventListener : groupChatEventListenerList) {
+                    groupChatEventListener.onGroupNameChanged(groupId, newGroupName);
                 }
             }
-        } else if (TextUtils.equals(key, TUIChatConstants.EVENT_KEY_OFFLINE_MESSAGE_PRIVATE_RING)) {
-            if (TextUtils.equals(subKey, TUIChatConstants.EVENT_SUB_KEY_OFFLINE_MESSAGE_PRIVATE_RING)) {
-                Boolean isPrivateRing = (Boolean) param.get(TUIChatConstants.OFFLINE_MESSAGE_PRIVATE_RING);
-                TUIChatConfigs.getConfigs().getGeneralConfig().setAndroidPrivateRing(isPrivateRing);
+            if (!TextUtils.isEmpty(groupFaceUrl)) {
+                List<GroupChatEventListener> groupChatEventListenerList = getGroupChatEventListenerList();
+                for (GroupChatEventListener groupChatEventListener : groupChatEventListenerList) {
+                    groupChatEventListener.onGroupFaceUrlChanged(groupId, groupFaceUrl);
+                }
+            }
+        } else if (TextUtils.equals(subKey, TUIConstants.TUIGroup.EVENT_SUB_KEY_MEMBER_KICKED_GROUP)) {
+            if (param == null) {
+                return;
+            }
+            String groupId = (String) getOrDefault(param.get(TUIConstants.TUIGroup.GROUP_ID), "");
+            ArrayList<String> memberList = (ArrayList<String>) param.get(TUIConstants.TUIGroup.GROUP_MEMBER_ID_LIST);
+            if (TextUtils.isEmpty(groupId) || memberList == null || memberList.isEmpty()) {
+                return;
+            }
+            String selfId = TUILogin.getLoginUser();
+            if (memberList.contains(selfId)) {
+                List<GroupChatEventListener> groupChatEventListenerList = getGroupChatEventListenerList();
+                for (GroupChatEventListener groupChatEventListener : groupChatEventListenerList) {
+                    groupChatEventListener.onGroupForceExit(groupId);
+                }
+            }
+        } else if (TextUtils.equals(subKey, TUIConstants.TUIGroup.EVENT_SUB_KEY_CLEAR_MESSAGE)) {
+            String groupId = (String) getOrDefault(param.get(TUIConstants.TUIGroup.GROUP_ID), "");
+            List<GroupChatEventListener> groupChatEventListenerList = getGroupChatEventListenerList();
+            for (GroupChatEventListener groupChatEventListener : groupChatEventListenerList) {
+                groupChatEventListener.clearGroupMessage(groupId);
+            }
+        }
+    }
+
+    private void handleGroupApplicationEvent(String subKey, Map<String, Object> param) {
+        if (TextUtils.equals(subKey, TUIConstants.TUIGroup.Event.GroupApplication.SUB_KEY_GROUP_APPLICATION_NUM_CHANGED)) {
+            List<GroupChatEventListener> groupChatEventListenerList = getGroupChatEventListenerList();
+            for (GroupChatEventListener groupChatEventListener : groupChatEventListenerList) {
+                groupChatEventListener.onApplied();
             }
         }
     }
@@ -328,6 +376,21 @@ public class TUIChatService extends ServiceInitializer implements ITUIChatServic
     private Object getOrDefault(Object value, Object defaultValue) {
         if (value != null) {
             return value;
+        }
+        return defaultValue;
+    }
+
+    private <T> T getOrDefault(Map map, Object key, T defaultValue) {
+        if (map == null || map.isEmpty()) {
+            return defaultValue;
+        }
+        Object object = map.get(key);
+        try {
+            if (object != null) {
+                return (T) object;
+            }
+        } catch (ClassCastException e) {
+            return defaultValue;
         }
         return defaultValue;
     }
@@ -479,23 +542,48 @@ public class TUIChatService extends ServiceInitializer implements ITUIChatServic
      * 注册自定义消息类型
      * @param businessId 自定义消息唯一标识（注意不能重复）
      * @param beanClass 消息 MessageBean 类型
+     * @param isDefault 是否是在 TUIChat 内部定义的
      *
      * Register a custom message type
      * @param businessId Custom message unique identifier（cannot be repeated）
      * @param beanClass  MessageBean type
      */
-    private void addCustomMessageType(String businessId, Class<? extends TUIMessageBean> beanClass) {
+    public void addCustomMessageType(String businessId, Class<? extends TUIMessageBean> beanClass, boolean isDefault) {
+        if (customMessageMap.containsKey(businessId)) {
+            TUIChatLog.e(TAG, "addCustomMessageType: businessID can not be same with the exists: " + businessId);
+            return;
+        }
         customMessageMap.put(businessId, beanClass);
+        if (!isDefault) {
+            extensionMessageClass.add(beanClass);
+        }
+    }
+
+    /**
+     * 注册自定义消息类型
+     * @param businessId 自定义消息唯一标识（注意不能重复）
+     * @param beanClass 消息 MessageBean 类型
+     *
+     * Register a custom message type
+     * @param businessId Custom message unique identifier（cannot be repeated）
+     * @param beanClass  MessageBean type
+     */
+    public void addCustomMessageType(String businessId, Class<? extends TUIMessageBean> beanClass) {
+        addCustomMessageType(businessId, beanClass, true);
     }
 
     public Class<? extends TUIMessageBean> getMessageBeanClass(String businessId) {
         return customMessageMap.get(businessId);
     }
 
+    public Set<Class<? extends TUIMessageBean>> getExtensionMessageClassSet() {
+        return extensionMessageClass;
+    }
+
     private List<GroupChatEventListener> getGroupChatEventListenerList() {
         List<GroupChatEventListener> listeners = new ArrayList<>();
         Iterator<WeakReference<GroupChatEventListener>> iterator = groupChatEventListenerList.listIterator();
-        while(iterator.hasNext()) {
+        while (iterator.hasNext()) {
             WeakReference<GroupChatEventListener> listenerWeakReference = iterator.next();
             GroupChatEventListener listener = listenerWeakReference.get();
             if (listener == null) {
@@ -522,7 +610,7 @@ public class TUIChatService extends ServiceInitializer implements ITUIChatServic
     private List<C2CChatEventListener> getC2CChatEventListenerList() {
         List<C2CChatEventListener> listeners = new ArrayList<>();
         Iterator<WeakReference<C2CChatEventListener>> iterator = c2CChatEventListenerList.listIterator();
-        while(iterator.hasNext()) {
+        while (iterator.hasNext()) {
             WeakReference<C2CChatEventListener> listenerWeakReference = iterator.next();
             C2CChatEventListener listener = listenerWeakReference.get();
             if (listener == null) {
@@ -543,7 +631,8 @@ public class TUIChatService extends ServiceInitializer implements ITUIChatServic
                 return;
             }
         }
-        c2CChatEventListenerList.add(new WeakReference<>(c2cChatEventListener));    }
+        c2CChatEventListenerList.add(new WeakReference<>(c2cChatEventListener));
+    }
 
     public void setMessageSender(IBaseMessageSender baseMessageSender) {
         messageSender = new WeakReference<>(baseMessageSender);
@@ -561,41 +650,12 @@ public class TUIChatService extends ServiceInitializer implements ITUIChatServic
         unreadCountListenerList.add(new WeakReference<>(unreadCountListener));
     }
 
-
     private List<TotalUnreadCountListener> getUnreadCountListenerList() {
         List<TotalUnreadCountListener> listeners = new ArrayList<>();
         Iterator<WeakReference<TotalUnreadCountListener>> iterator = unreadCountListenerList.listIterator();
-        while(iterator.hasNext()) {
+        while (iterator.hasNext()) {
             WeakReference<TotalUnreadCountListener> listenerWeakReference = iterator.next();
             TotalUnreadCountListener listener = listenerWeakReference.get();
-            if (listener == null) {
-                iterator.remove();
-            } else {
-                listeners.add(listener);
-            }
-        }
-        return listeners;
-    }
-
-    public void addAudioRecordEventListener(AudioRecordEventListener audioRecordEventListener) {
-        if (audioRecordEventListener == null) {
-            return;
-        }
-
-        for (WeakReference<AudioRecordEventListener> listenerWeakReference : audioRecordEventListenerList) {
-            if (listenerWeakReference.get() == audioRecordEventListener) {
-                return;
-            }
-        }
-        audioRecordEventListenerList.add(new WeakReference<>(audioRecordEventListener));
-    }
-
-    public List<AudioRecordEventListener> getAudioRecordEventListenerList() {
-        List<AudioRecordEventListener> listeners = new ArrayList<>();
-        Iterator<WeakReference<AudioRecordEventListener>> iterator = audioRecordEventListenerList.listIterator();
-        while(iterator.hasNext()) {
-            WeakReference<AudioRecordEventListener> listenerWeakReference = iterator.next();
-            AudioRecordEventListener listener = listenerWeakReference.get();
             if (listener == null) {
                 iterator.remove();
             } else {

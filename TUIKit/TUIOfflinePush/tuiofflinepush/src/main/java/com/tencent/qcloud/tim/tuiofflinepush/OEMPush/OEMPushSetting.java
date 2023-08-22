@@ -7,12 +7,10 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Build;
 import android.text.TextUtils;
-
+import androidx.annotation.NonNull;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.iid.FirebaseInstanceId;
-import com.google.firebase.iid.InstanceIdResult;
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.heytap.msp.push.HeytapPushManager;
 import com.hihonor.push.sdk.HonorInstanceId;
 import com.hihonor.push.sdk.HonorMessaging;
@@ -33,7 +31,7 @@ import com.vivo.push.IPushActionListener;
 import com.vivo.push.PushClient;
 import com.xiaomi.mipush.sdk.MiPushClient;
 
-public class OEMPushSetting implements PushSettingInterface{
+public class OEMPushSetting implements PushSettingInterface {
     private static final String TAG = OEMPushSetting.class.getSimpleName();
     protected static PushCallback mPushCallback = null;
 
@@ -63,9 +61,9 @@ public class OEMPushSetting implements PushSettingInterface{
                             String pushToken = HonorInstanceId.getInstance(context).getPushToken();
                             TUIOfflinePushLog.i(TAG, "Honor get pushToken " + pushToken);
 
-                            //判断pushToken是否为空
+                            // 判断pushToken是否为空
                             if (!TextUtils.isEmpty(pushToken)) {
-                                //PushToken保存到您的服务器上
+                                // PushToken保存到您的服务器上
                                 if (mPushCallback != null) {
                                     mPushCallback.onTokenCallback(pushToken);
                                 } else {
@@ -108,7 +106,7 @@ public class OEMPushSetting implements PushSettingInterface{
                             String appId = AGConnectServicesConfig.fromContext(context).getString("client/app_id");
                             String token = HmsInstanceId.getInstance(context).getToken(appId, "HCM");
                             TUIOfflinePushLog.i(TAG, "huawei get token:" + token);
-                            if(!TextUtils.isEmpty(token)) {
+                            if (!TextUtils.isEmpty(token)) {
                                 if (mPushCallback != null) {
                                     mPushCallback.onTokenCallback(token);
                                 } else {
@@ -178,40 +176,39 @@ public class OEMPushSetting implements PushSettingInterface{
                 break;
             default:
                 if (isGoogleServiceSupport()) {
-                    FirebaseInstanceId.getInstance().getInstanceId()
-                            .addOnCompleteListener(new com.google.android.gms.tasks.OnCompleteListener<InstanceIdResult>() {
-                                @Override
-                                public void onComplete(Task<InstanceIdResult> task) {
-                                    if (!task.isSuccessful()) {
-                                        TUIOfflinePushLog.e(TAG, "getInstanceId failed exception = " + task.getException());
-                                        if (mPushCallback != null) {
-                                            TUIOfflinePushErrorBean errorBean = new TUIOfflinePushErrorBean();
-                                            errorBean.setErrorCode(TUIOfflinePushConfig.REGISTER_TOKEN_ERROR_CODE);
-                                            errorBean.setErrorDescription("fcm exception: " + task.getException());
-                                            mPushCallback.onTokenErrorCallBack(errorBean);
-                                        } else {
-                                            TUIOfflinePushLog.e(TAG, "mPushCallback is null");
-                                        }
-                                        return;
-                                    }
-
-                                    // Get new Instance ID token
-                                    String token = task.getResult().getToken();
-                                    TUIOfflinePushLog.i(TAG, "google fcm getToken = " + token);
-                                    createPrivateNotification(context);
-                                    if (mPushCallback != null) {
-                                        mPushCallback.onTokenCallback(token);
-                                    } else {
-                                        TUIOfflinePushLog.e(TAG, "mPushCallback is null");
-                                    }
+                    FirebaseMessaging.getInstance().getToken().addOnCompleteListener(new com.google.android.gms.tasks.OnCompleteListener<String>() {
+                        @Override
+                        public void onComplete(@NonNull com.google.android.gms.tasks.Task<String> task) {
+                            if (!task.isSuccessful()) {
+                                TUIOfflinePushLog.e(TAG, "getInstanceId failed exception = " + task.getException());
+                                if (mPushCallback != null) {
+                                    TUIOfflinePushErrorBean errorBean = new TUIOfflinePushErrorBean();
+                                    errorBean.setErrorCode(TUIOfflinePushConfig.REGISTER_TOKEN_ERROR_CODE);
+                                    errorBean.setErrorDescription("fcm exception: " + task.getException());
+                                    mPushCallback.onTokenErrorCallBack(errorBean);
+                                } else {
+                                    TUIOfflinePushLog.e(TAG, "mPushCallback is null");
                                 }
-                            });
+                                return;
+                            }
+
+                            // Get new Instance ID token
+                            String token = task.getResult();
+                            TUIOfflinePushLog.i(TAG, "google fcm getToken = " + token);
+                            createPrivateNotification(context);
+                            if (mPushCallback != null) {
+                                mPushCallback.onTokenCallback(token);
+                            } else {
+                                TUIOfflinePushLog.e(TAG, "mPushCallback is null");
+                            }
+                        }
+                    });
                 }
                 break;
         }
     }
 
-    public void setPushCallback(PushCallback callback){
+    public void setPushCallback(PushCallback callback) {
         mPushCallback = callback;
     }
 
@@ -228,11 +225,12 @@ public class OEMPushSetting implements PushSettingInterface{
         }
         if (TUIOfflinePushConfig.getInstance().isAndroidPrivateRing() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationManager nm = (NotificationManager) context.getSystemService(context.NOTIFICATION_SERVICE);
-            if (nm != null){
+            if (nm != null) {
                 NotificationChannelGroup notificationChannelGroup = new NotificationChannelGroup("MyGroupId", "CustomGroup");
                 nm.createNotificationChannelGroup(notificationChannelGroup);
 
-                NotificationChannel notificationChannel = new NotificationChannel(PrivateConstants.fcmPushChannelId, "CustomGroup", NotificationManager.IMPORTANCE_HIGH);
+                NotificationChannel notificationChannel =
+                    new NotificationChannel(PrivateConstants.fcmPushChannelId, "CustomGroup", NotificationManager.IMPORTANCE_HIGH);
                 notificationChannel.setGroup("MyGroupId");
                 notificationChannel.enableLights(true);
                 notificationChannel.enableVibration(true);
@@ -244,5 +242,4 @@ public class OEMPushSetting implements PushSettingInterface{
             }
         }
     }
-
 }

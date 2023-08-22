@@ -1,21 +1,19 @@
 package com.tencent.qcloud.tuikit.tuichat.bean.message;
 
 import android.text.TextUtils;
-
 import com.tencent.imsdk.v2.V2TIMDownloadCallback;
 import com.tencent.imsdk.v2.V2TIMElem;
 import com.tencent.imsdk.v2.V2TIMFileElem;
 import com.tencent.imsdk.v2.V2TIMMessage;
 import com.tencent.qcloud.tuicore.TUIConfig;
+import com.tencent.qcloud.tuikit.timcommon.bean.TUIMessageBean;
+import com.tencent.qcloud.tuikit.timcommon.bean.TUIReplyQuoteBean;
 import com.tencent.qcloud.tuikit.tuichat.R;
 import com.tencent.qcloud.tuikit.tuichat.TUIChatService;
 import com.tencent.qcloud.tuikit.tuichat.bean.message.reply.FileReplyQuoteBean;
-import com.tencent.qcloud.tuikit.tuichat.bean.message.reply.TUIReplyQuoteBean;
-
 import java.io.File;
 
 public class FileMessageBean extends TUIMessageBean {
-
     private String dataPath;
     private V2TIMFileElem fileElem;
 
@@ -67,7 +65,7 @@ public class FileMessageBean extends TUIMessageBean {
 
     /**
      * 获取文件的保存路径
-     * 
+     *
      * Get the save path of the file
      *
      * @return
@@ -78,7 +76,7 @@ public class FileMessageBean extends TUIMessageBean {
 
     /**
      * 设置文件的保存路径
-     * 
+     *
      * Set the save path of the file
      *
      * @param dataPath
@@ -93,6 +91,7 @@ public class FileMessageBean extends TUIMessageBean {
         }
         return "";
     }
+
     public String getFileName() {
         if (fileElem != null) {
             return fileElem.getFileName();
@@ -153,5 +152,4 @@ public class FileMessageBean extends TUIMessageBean {
     public Class<? extends TUIReplyQuoteBean> getReplyQuoteBeanClass() {
         return FileReplyQuoteBean.class;
     }
-
 }

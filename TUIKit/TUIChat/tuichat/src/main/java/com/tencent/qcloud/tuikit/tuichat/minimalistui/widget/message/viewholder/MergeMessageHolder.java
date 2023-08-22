@@ -1,16 +1,12 @@
 package com.tencent.qcloud.tuikit.tuichat.minimalistui.widget.message.viewholder;
 
-import android.content.Intent;
 import android.view.View;
 import android.widget.TextView;
-
+import com.tencent.qcloud.tuikit.timcommon.bean.TUIMessageBean;
+import com.tencent.qcloud.tuikit.timcommon.component.face.FaceManager;
+import com.tencent.qcloud.tuikit.timcommon.minimalistui.widget.message.MessageContentHolder;
 import com.tencent.qcloud.tuikit.tuichat.R;
-import com.tencent.qcloud.tuikit.tuichat.TUIChatConstants;
 import com.tencent.qcloud.tuikit.tuichat.bean.message.MergeMessageBean;
-import com.tencent.qcloud.tuikit.tuichat.bean.message.TUIMessageBean;
-import com.tencent.qcloud.tuikit.tuichat.component.face.FaceManager;
-import com.tencent.qcloud.tuikit.tuichat.minimalistui.page.TUIForwardChatMinimalistActivity;
-
 import java.util.List;
 
 public class MergeMessageHolder extends MessageContentHolder {
@@ -34,7 +30,7 @@ public class MergeMessageHolder extends MessageContentHolder {
 
     @Override
     public void layoutVariableViews(final TUIMessageBean msg, final int position) {
-        if (msg == null){
+        if (msg == null) {
             return;
         }
         msgArea.setBackgroundResource(R.drawable.chat_minimalist_merge_message_border);
@@ -52,7 +48,7 @@ public class MergeMessageHolder extends MessageContentHolder {
 
         MergeMessageBean messageBean = (MergeMessageBean) msg;
         String title = messageBean.getTitle();
-        List<String> abstractList= messageBean.getAbstractList();
+        List<String> abstractList = messageBean.getAbstractList();
         msgForwardTitle.setText(title);
         String content = "";
         for (int i = 0; i < abstractList.size(); i++) {
@@ -85,22 +81,20 @@ public class MergeMessageHolder extends MessageContentHolder {
                     return true;
                 }
             });
-
-            mForwardMsgLayout.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    if (presenter == null || presenter.getChatInfo() == null) {
-                        return;
-                    }
-                    Intent intent = new Intent(view.getContext(), TUIForwardChatMinimalistActivity.class);
-                    intent.putExtra(TUIChatConstants.FORWARD_MERGE_MESSAGE_KEY, msg);
-                    intent.putExtra(TUIChatConstants.CHAT_INFO, presenter.getChatInfo());
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    view.getContext().startActivity(intent);
-                }
-            });
         }
+        mForwardMsgLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (onItemClickListener != null) {
+                    onItemClickListener.onMessageClick(msgArea, position, msg);
+                }
+            }
+        });
         setMessageAreaPadding();
     }
 
+    @Override
+    protected boolean isNeedChangedBackground() {
+        return false;
+    }
 }

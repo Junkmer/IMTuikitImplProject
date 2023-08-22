@@ -1,10 +1,9 @@
 package com.tencent.qcloud.tuikit.tuiconversation.commonutil;
 
-import com.tencent.qcloud.tuicore.component.interfaces.IUIKitCallback;
 import com.tencent.qcloud.tuicore.util.ErrorMessageConverter;
+import com.tencent.qcloud.tuikit.timcommon.component.interfaces.IUIKitCallback;
 
 public class TUIConversationUtils {
-
     public static <T> void callbackOnError(IUIKitCallback<T> callBack, String module, int errCode, String desc) {
         if (callBack != null) {
             callBack.onError(module, errCode, ErrorMessageConverter.convertIMError(errCode, desc));

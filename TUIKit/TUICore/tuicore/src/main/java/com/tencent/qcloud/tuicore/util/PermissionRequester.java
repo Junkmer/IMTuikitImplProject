@@ -1,6 +1,5 @@
 package com.tencent.qcloud.tuicore.util;
 
-
 import android.Manifest;
 import android.app.ActionBar;
 import android.app.Activity;
@@ -25,16 +24,13 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.TextView;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.StringDef;
 import androidx.core.content.ContextCompat;
-
 import com.tencent.qcloud.tuicore.R;
 import com.tencent.qcloud.tuicore.TUIConfig;
-
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
@@ -47,7 +43,6 @@ import java.util.Map;
 import java.util.Set;
 
 public final class PermissionRequester {
-
     private static final List<String> PERMISSIONS = getPermissions();
 
     private static PermissionRequester instance;
@@ -116,7 +111,9 @@ public final class PermissionRequester {
         PackageManager pm = getApplicationContext().getPackageManager();
         try {
             String[] permissions = pm.getPackageInfo(packageName, PackageManager.GET_PERMISSIONS).requestedPermissions;
-            if (permissions == null) return Collections.emptyList();
+            if (permissions == null) {
+                return Collections.emptyList();
+            }
             return Arrays.asList(permissions);
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
@@ -135,8 +132,7 @@ public final class PermissionRequester {
 
     private static boolean isGranted(final String permission) {
         return TUIBuild.getVersionInt() < Build.VERSION_CODES.M
-                || PackageManager.PERMISSION_GRANTED
-                == ContextCompat.checkSelfPermission(getApplicationContext(), permission);
+            || PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(getApplicationContext(), permission);
     }
 
     /**
@@ -145,7 +141,9 @@ public final class PermissionRequester {
     public static void launchAppDetailsSettings() {
         Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
         intent.setData(Uri.parse("package:" + getApplicationContext().getPackageName()));
-        if (!isIntentAvailable(intent)) return;
+        if (!isIntentAvailable(intent)) {
+            return;
+        }
         getApplicationContext().startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
     }
 
@@ -160,10 +158,7 @@ public final class PermissionRequester {
     }
 
     private static boolean isIntentAvailable(final Intent intent) {
-        return getApplicationContext()
-                .getPackageManager()
-                .queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY)
-                .size() > 0;
+        return getApplicationContext().getPackageManager().queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY).size() > 0;
     }
 
     private PermissionRequester(final String permission) {
@@ -235,6 +230,7 @@ public final class PermissionRequester {
             mPermissionsGranted.addAll(mPermissions);
             isRequesting = false;
             requestCallback();
+            mDialogCallback = null;
         } else {
             for (String permission : mPermissions) {
                 if (isGranted(permission)) {
@@ -246,6 +242,7 @@ public final class PermissionRequester {
             if (mPermissionsRequest.isEmpty()) {
                 isRequesting = false;
                 requestCallback();
+                mDialogCallback = null;
             } else {
                 startPermissionActivity();
             }
@@ -276,8 +273,7 @@ public final class PermissionRequester {
 
     private void requestCallback() {
         if (mSimpleCallback != null) {
-            if (mPermissionsRequest.size() == 0
-                    || mPermissions.size() == mPermissionsGranted.size()) {
+            if (mPermissionsRequest.size() == 0 || mPermissions.size() == mPermissionsGranted.size()) {
                 mSimpleCallback.onGranted();
             } else {
                 if (!mPermissionsDenied.isEmpty()) {
@@ -287,8 +283,7 @@ public final class PermissionRequester {
             mSimpleCallback = null;
         }
         if (mFullCallback != null) {
-            if (mPermissionsRequest.size() == 0
-                    || mPermissions.size() == mPermissionsGranted.size()) {
+            if (mPermissionsRequest.size() == 0 || mPermissions.size() == mPermissionsGranted.size()) {
                 mFullCallback.onGranted(mPermissionsGranted);
             } else {
                 if (!mPermissionsDenied.isEmpty()) {
@@ -297,11 +292,9 @@ public final class PermissionRequester {
             }
             mFullCallback = null;
         }
-        mDialogCallback = null;
     }
 
     private void onRequestPermissionsResult(final Activity activity) {
-
         getPermissionsStatus();
         if (!mPermissionsDenied.isEmpty()) {
             showPermissionDialog(activity, new PermissionDialogCallback() {
@@ -340,8 +333,7 @@ public final class PermissionRequester {
             super.onCreate(savedInstanceState);
             if (TUIBuild.getVersionInt() >= Build.VERSION_CODES.LOLLIPOP) {
                 View decorView = getWindow().getDecorView();
-                decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                        | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+                decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
                 getWindow().setStatusBarColor(Color.TRANSPARENT);
                 getWindow().setNavigationBarColor(Color.TRANSPARENT);
             }
@@ -403,10 +395,7 @@ public final class PermissionRequester {
         }
 
         @Override
-        public void onRequestPermissionsResult(int requestCode,
-                                               @NonNull String[] permissions,
-                                               @NonNull int[] grantResults) {
-
+        public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
             if (instance.mPermissionsRequest != null) {
                 hideContentView();
                 instance.onRequestPermissionsResult(this);
@@ -434,69 +423,67 @@ public final class PermissionRequester {
     // interface
     ///////////////////////////////////////////////////////////////////////////
 
-
     public interface SimpleCallback {
         void onGranted();
+
         void onDenied();
     }
 
     public interface FullCallback {
         void onGranted(List<String> permissionsGranted);
+
         void onDenied(List<String> permissionsDenied);
     }
 
     public static final class PermissionConstants {
-
-        public static final String CALENDAR   = Manifest.permission_group.CALENDAR;
-        public static final String CAMERA     = Manifest.permission_group.CAMERA;
-        public static final String CONTACTS   = Manifest.permission_group.CONTACTS;
-        public static final String LOCATION   = Manifest.permission_group.LOCATION;
+        public static final String CALENDAR = Manifest.permission_group.CALENDAR;
+        public static final String CAMERA = Manifest.permission_group.CAMERA;
+        public static final String CONTACTS = Manifest.permission_group.CONTACTS;
+        public static final String LOCATION = Manifest.permission_group.LOCATION;
         public static final String MICROPHONE = Manifest.permission_group.MICROPHONE;
-        public static final String PHONE      = Manifest.permission_group.PHONE;
-        public static final String SENSORS    = Manifest.permission_group.SENSORS;
-        public static final String SMS        = Manifest.permission_group.SMS;
-        public static final String STORAGE    = Manifest.permission_group.STORAGE;
+        public static final String PHONE = Manifest.permission_group.PHONE;
+        public static final String SENSORS = Manifest.permission_group.SENSORS;
+        public static final String SMS = Manifest.permission_group.SMS;
+        public static final String STORAGE = Manifest.permission_group.STORAGE;
 
-        private static final String[] GROUP_CALENDAR      = {
-                Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR
+        private static final String[] GROUP_CALENDAR = {Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR};
+        private static final String[] GROUP_CAMERA = {Manifest.permission.CAMERA};
+        private static final String[] GROUP_CONTACTS = {
+            Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS, Manifest.permission.GET_ACCOUNTS};
+        private static final String[] GROUP_LOCATION = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION};
+        private static final String[] GROUP_MICROPHONE = {Manifest.permission.RECORD_AUDIO};
+        private static final String[] GROUP_PHONE = {Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_PHONE_NUMBERS,
+            Manifest.permission.CALL_PHONE, Manifest.permission.READ_CALL_LOG, Manifest.permission.WRITE_CALL_LOG, Manifest.permission.ADD_VOICEMAIL,
+            Manifest.permission.USE_SIP, Manifest.permission.PROCESS_OUTGOING_CALLS, Manifest.permission.ANSWER_PHONE_CALLS};
+        private static final String[] GROUP_PHONE_BELOW_O = {Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_PHONE_NUMBERS,
+            Manifest.permission.CALL_PHONE, Manifest.permission.READ_CALL_LOG, Manifest.permission.WRITE_CALL_LOG, Manifest.permission.ADD_VOICEMAIL,
+            Manifest.permission.USE_SIP, Manifest.permission.PROCESS_OUTGOING_CALLS};
+        private static final String[] GROUP_SENSORS = {Manifest.permission.BODY_SENSORS};
+        private static final String[] GROUP_SMS = {
+            Manifest.permission.SEND_SMS,
+            Manifest.permission.RECEIVE_SMS,
+            Manifest.permission.READ_SMS,
+            Manifest.permission.RECEIVE_WAP_PUSH,
+            Manifest.permission.RECEIVE_MMS,
         };
-        private static final String[] GROUP_CAMERA        = {
-                Manifest.permission.CAMERA
-        };
-        private static final String[] GROUP_CONTACTS      = {
-                Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS, Manifest.permission.GET_ACCOUNTS
-        };
-        private static final String[] GROUP_LOCATION      = {
-                Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION
-        };
-        private static final String[] GROUP_MICROPHONE    = {
-                Manifest.permission.RECORD_AUDIO
-        };
-        private static final String[] GROUP_PHONE         = {
-                Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_PHONE_NUMBERS, Manifest.permission.CALL_PHONE,
-                Manifest.permission.READ_CALL_LOG, Manifest.permission.WRITE_CALL_LOG, Manifest.permission.ADD_VOICEMAIL,
-                Manifest.permission.USE_SIP, Manifest.permission.PROCESS_OUTGOING_CALLS, Manifest.permission.ANSWER_PHONE_CALLS
-        };
-        private static final String[] GROUP_PHONE_BELOW_O = {
-                Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_PHONE_NUMBERS, Manifest.permission.CALL_PHONE,
-                Manifest.permission.READ_CALL_LOG, Manifest.permission.WRITE_CALL_LOG, Manifest.permission.ADD_VOICEMAIL,
-                Manifest.permission.USE_SIP, Manifest.permission.PROCESS_OUTGOING_CALLS
-        };
-        private static final String[] GROUP_SENSORS       = {
-                Manifest.permission.BODY_SENSORS
-        };
-        private static final String[] GROUP_SMS           = {
-                Manifest.permission.SEND_SMS, Manifest.permission.RECEIVE_SMS, Manifest.permission.READ_SMS,
-                Manifest.permission.RECEIVE_WAP_PUSH, Manifest.permission.RECEIVE_MMS,
-        };
-        private static final String[] GROUP_STORAGE       = {
-                Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE,
+        private static final String[] GROUP_STORAGE = {
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
         };
 
-        @StringDef({CALENDAR, CAMERA, CONTACTS, LOCATION, MICROPHONE, PHONE, SENSORS, SMS, STORAGE,})
+        @StringDef({
+            CALENDAR,
+            CAMERA,
+            CONTACTS,
+            LOCATION,
+            MICROPHONE,
+            PHONE,
+            SENSORS,
+            SMS,
+            STORAGE,
+        })
         @Retention(RetentionPolicy.SOURCE)
-        public @interface Permission {
-        }
+        public @interface Permission {}
 
         public static String[] getPermissions(@Permission final String permission) {
             switch (permission) {
@@ -522,8 +509,10 @@ public final class PermissionRequester {
                     return GROUP_SMS;
                 case STORAGE:
                     return GROUP_STORAGE;
+                default:
+                    break;
             }
-            return new String[]{permission};
+            return new String[] {permission};
         }
     }
 
@@ -535,7 +524,6 @@ public final class PermissionRequester {
     }
 
     public void showPermissionDialog(Activity activity, PermissionDialogCallback callback) {
-
         PermissionRequestContent info = permissionRequestContentMap.get(instance.mCurrentRequestPermission);
         String deniedAlert = mDeniedAlert;
         if (info != null) {
@@ -564,15 +552,15 @@ public final class PermissionRequester {
         tipsTv.setText(deniedAlert);
 
         Dialog permissionTipDialog = new AlertDialog.Builder(activity)
-                .setView(itemPop)
-                .setCancelable(false)
-                .setOnDismissListener(new DialogInterface.OnDismissListener() {
-                    @Override
-                    public void onDismiss(DialogInterface dialog) {
-                        isRequesting = false;
-                    }
-                })
-                .create();
+                                         .setView(itemPop)
+                                         .setCancelable(false)
+                                         .setOnDismissListener(new DialogInterface.OnDismissListener() {
+                                             @Override
+                                             public void onDismiss(DialogInterface dialog) {
+                                                 isRequesting = false;
+                                             }
+                                         })
+                                         .create();
 
         positiveBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -615,9 +603,9 @@ public final class PermissionRequester {
         dialogWindow.setAttributes(layoutParams);
     }
 
-    public interface PermissionDialogCallback{
+    public interface PermissionDialogCallback {
         void onApproved();
+
         void onRefused();
     }
-
 }

@@ -1,30 +1,27 @@
 package com.tencent.qcloud.tuikit.tuicontact.minimalistui.widget;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
-import com.tencent.qcloud.tuicore.component.CustomLinearLayoutManager;
+import com.tencent.qcloud.tuikit.timcommon.component.CustomLinearLayoutManager;
+import com.tencent.qcloud.tuikit.timcommon.util.ScreenUtil;
 import com.tencent.qcloud.tuikit.tuicontact.R;
 import com.tencent.qcloud.tuikit.tuicontact.bean.ContactItemBean;
-import com.tencent.qcloud.tuikit.tuicontact.component.indexlib.IndexBar.widget.IndexBar;
+import com.tencent.qcloud.tuikit.tuicontact.component.indexlib.indexbar.widget.IndexBar;
 import com.tencent.qcloud.tuikit.tuicontact.component.indexlib.suspension.SuspensionDecoration;
 import com.tencent.qcloud.tuikit.tuicontact.interfaces.IContactListView;
 import com.tencent.qcloud.tuikit.tuicontact.presenter.ContactPresenter;
-
 import java.util.ArrayList;
 import java.util.List;
 
-
 public class ContactListView extends LinearLayout implements IContactListView {
-
     private static final String TAG = ContactListView.class.getSimpleName();
 
     private RecyclerView mRv;
@@ -90,15 +87,19 @@ public class ContactListView extends LinearLayout implements IContactListView {
 
         mAdapter = new ContactAdapter(mData);
         mRv.setAdapter(mAdapter);
-        mRv.addItemDecoration(mDecoration = new SuspensionDecoration(getContext(), mData));
+        mDecoration = new SuspensionDecoration(getContext(), mData);
+        mDecoration.setColorTitleBg(Color.WHITE);
+        mDecoration.setColorTitleFont(Color.BLACK);
+        mDecoration.setTitleHeight(ScreenUtil.dip2px(44));
+        mDecoration.setShowLine(false);
+        mRv.addItemDecoration(mDecoration);
         mRv.addOnScrollListener(new RecyclerView.OnScrollListener() {
-
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
                 LinearLayoutManager layoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
                 int lastCompletelyVisibleItemPosition = layoutManager.findLastCompletelyVisibleItemPosition();
-                if(lastCompletelyVisibleItemPosition==layoutManager.getItemCount()-1) {
+                if (lastCompletelyVisibleItemPosition == layoutManager.getItemCount() - 1) {
                     if (presenter.getNextSeq() > 0) {
                         presenter.loadGroupMemberList(groupId);
                     }
@@ -107,9 +108,7 @@ public class ContactListView extends LinearLayout implements IContactListView {
         });
         mTvSideBarHint = findViewById(R.id.contact_tvSideBarHint);
         mIndexBar = findViewById(R.id.contact_indexBar);
-        mIndexBar.setPressedShowTextView(mTvSideBarHint)
-                .setNeedRealIndex(false)
-                .setLayoutManager(mManager);
+        mIndexBar.setPressedShowTextView(mTvSideBarHint).setNeedRealIndex(false).setLayoutManager(mManager);
         mContactLoadingBar = findViewById(R.id.contact_loading_bar);
     }
 
@@ -183,5 +182,4 @@ public class ContactListView extends LinearLayout implements IContactListView {
     public interface OnItemClickListener {
         void onItemClick(int position, ContactItemBean contact);
     }
-
 }

@@ -8,12 +8,10 @@ import com.tencent.qcloud.tuikit.tuisearch.bean.ChatInfo;
 import com.tencent.qcloud.tuikit.tuisearch.util.TUISearchUtils;
 
 public class MinimalistSearchUtils {
-
     public static void startChatActivity(ChatInfo chatInfo) {
         Bundle param = new Bundle();
         param.putInt(TUIConstants.TUIChat.CHAT_TYPE, chatInfo.getType());
         param.putString(TUIConstants.TUIChat.CHAT_ID, chatInfo.getId());
-        param.putString(TUIConstants.TUIChat.CHAT_NAME, chatInfo.getChatName());
         if (chatInfo.getDraft() != null) {
             param.putString(TUIConstants.TUIChat.DRAFT_TEXT, chatInfo.getDraft().getDraftText());
             param.putLong(TUIConstants.TUIChat.DRAFT_TIME, chatInfo.getDraft().getDraftTime());

@@ -1,29 +1,27 @@
 package com.tencent.qcloud.tuikit.tuicontact.minimalistui.widget;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Resources;
-import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.ImageView;
 import android.widget.TextView;
-
-import com.tencent.qcloud.tuicore.TUICore;
-import com.tencent.qcloud.tuicore.component.imageEngine.impl.GlideEngine;
-import com.tencent.qcloud.tuicore.component.interfaces.IUIKitCallback;
 import com.tencent.qcloud.tuicore.util.ToastUtil;
+import com.tencent.qcloud.tuikit.timcommon.component.gatherimage.ShadeImageView;
+import com.tencent.qcloud.tuikit.timcommon.component.impl.GlideEngine;
+import com.tencent.qcloud.tuikit.timcommon.component.interfaces.IUIKitCallback;
+import com.tencent.qcloud.tuikit.timcommon.util.ScreenUtil;
 import com.tencent.qcloud.tuikit.tuicontact.R;
 import com.tencent.qcloud.tuikit.tuicontact.TUIContactConstants;
 import com.tencent.qcloud.tuikit.tuicontact.bean.FriendApplicationBean;
+import com.tencent.qcloud.tuikit.tuicontact.minimalistui.pages.NewFriendApplicationDetailMinimalistActivity;
 import com.tencent.qcloud.tuikit.tuicontact.presenter.NewFriendPresenter;
-
 import java.util.List;
 
 public class NewFriendListAdapter extends ArrayAdapter<FriendApplicationBean> {
-
     private static final String TAG = NewFriendListAdapter.class.getSimpleName();
 
     private int mResourceId;
@@ -31,6 +29,7 @@ public class NewFriendListAdapter extends ArrayAdapter<FriendApplicationBean> {
     private ViewHolder mViewHolder;
 
     private NewFriendPresenter presenter;
+
     /**
      * Constructor
      *
@@ -44,7 +43,6 @@ public class NewFriendListAdapter extends ArrayAdapter<FriendApplicationBean> {
         mResourceId = resource;
     }
 
-
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         final FriendApplicationBean data = getItem(position);
@@ -56,9 +54,9 @@ public class NewFriendListAdapter extends ArrayAdapter<FriendApplicationBean> {
             mView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Bundle bundle = new Bundle();
-                    bundle.putSerializable(TUIContactConstants.ProfileType.CONTENT, data);
-                    TUICore.startActivity("FriendProfileMinimalistActivity", bundle);
+                    Intent intent = new Intent(getContext(), NewFriendApplicationDetailMinimalistActivity.class);
+                    intent.putExtra(TUIContactConstants.ProfileType.CONTENT, data);
+                    getContext().startActivity(intent);
                 }
             });
             mViewHolder = new ViewHolder();
@@ -71,7 +69,8 @@ public class NewFriendListAdapter extends ArrayAdapter<FriendApplicationBean> {
             mView.setTag(mViewHolder);
         }
         Resources res = getContext().getResources();
-        int radius = mView.getResources().getDimensionPixelSize(R.dimen.contact_profile_face_radius);
+        int radius = ScreenUtil.dip2px(25);
+        mViewHolder.avatar.setRadius(radius);
         GlideEngine.loadUserIcon(mViewHolder.avatar, data.getFaceUrl(), radius);
         mViewHolder.name.setText(TextUtils.isEmpty(data.getNickName()) ? data.getUserId() : data.getNickName());
         mViewHolder.des.setText(data.getAddWording());
@@ -100,6 +99,8 @@ public class NewFriendListAdapter extends ArrayAdapter<FriendApplicationBean> {
             case FriendApplicationBean.FRIEND_APPLICATION_BOTH:
                 mViewHolder.agree.setText(res.getString(R.string.request_accepted));
                 break;
+            default:
+                break;
         }
         return mView;
     }
@@ -122,8 +123,7 @@ public class NewFriendListAdapter extends ArrayAdapter<FriendApplicationBean> {
             } else {
                 presenter.refuseFriendApplication(bean, new IUIKitCallback<Void>() {
                     @Override
-                    public void onSuccess(Void data) {
-                    }
+                    public void onSuccess(Void data) {}
 
                     @Override
                     public void onError(String module, int errCode, String errMsg) {
@@ -143,12 +143,11 @@ public class NewFriendListAdapter extends ArrayAdapter<FriendApplicationBean> {
     }
 
     public class ViewHolder {
-        ImageView avatar;
+        ShadeImageView avatar;
         TextView name;
         TextView des;
         TextView agree;
         TextView reject;
         TextView result;
     }
-
 }

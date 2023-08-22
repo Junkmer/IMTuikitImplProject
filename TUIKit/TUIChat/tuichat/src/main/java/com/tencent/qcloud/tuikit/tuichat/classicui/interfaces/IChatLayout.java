@@ -1,13 +1,14 @@
 package com.tencent.qcloud.tuikit.tuichat.classicui.interfaces;
 
-import com.tencent.qcloud.tuicore.component.interfaces.ILayout;
+import com.tencent.qcloud.tuikit.timcommon.bean.TUIMessageBean;
+import com.tencent.qcloud.tuikit.timcommon.component.TitleBarLayout;
+import com.tencent.qcloud.tuikit.timcommon.component.interfaces.ILayout;
+import com.tencent.qcloud.tuikit.tuichat.bean.ChatInfo;
 import com.tencent.qcloud.tuikit.tuichat.classicui.component.noticelayout.NoticeLayout;
-import com.tencent.qcloud.tuicore.component.TitleBarLayout;
-import com.tencent.qcloud.tuikit.tuichat.bean.message.TUIMessageBean;
+import com.tencent.qcloud.tuikit.tuichat.classicui.page.TUIBaseChatFragment;
 import com.tencent.qcloud.tuikit.tuichat.classicui.widget.ChatView;
 import com.tencent.qcloud.tuikit.tuichat.classicui.widget.input.InputView;
 import com.tencent.qcloud.tuikit.tuichat.classicui.widget.message.MessageRecyclerView;
-import com.tencent.qcloud.tuikit.tuichat.bean.ChatInfo;
 
 /**
  * 聊天窗口 {@link ChatView} 提供了消息的展示与发送等功能，界面布局从上到下分为四个部分: <br>
@@ -16,8 +17,8 @@ import com.tencent.qcloud.tuikit.tuichat.bean.ChatInfo;
  *  消息区 {@link MessageRecyclerView}，
  *  输入区 {@link InputView}，</pre>
  * 每个区域提供了多样的方法以供定制使用。
- * 
- * 
+ *
+ *
  * The chat window {@link ChatView} provides functions such as displaying and sending messages.
  * The interface layout is divided into four parts from top to bottom:
  *  TitleBarLayout {@link TitleBarLayout}，
@@ -27,7 +28,6 @@ import com.tencent.qcloud.tuikit.tuichat.bean.ChatInfo;
  *  Each area offers a variety of methods for customization.
  */
 public interface IChatLayout extends ILayout {
-
     /**
      * 获取聊天窗口 Input 区域 Layout
      *
@@ -69,7 +69,7 @@ public interface IChatLayout extends ILayout {
     /**
      * 初始化参数
      */
-    void initDefault();
+    void initDefault(TUIBaseChatFragment fragment);
 
     /**
      * 加载聊天消息

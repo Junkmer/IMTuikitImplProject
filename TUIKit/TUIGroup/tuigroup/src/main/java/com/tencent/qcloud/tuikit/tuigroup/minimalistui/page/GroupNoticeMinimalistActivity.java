@@ -10,19 +10,17 @@ import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
-
-import com.tencent.qcloud.tuicore.component.TitleBarLayout;
-import com.tencent.qcloud.tuicore.component.activities.BaseLightActivity;
-import com.tencent.qcloud.tuicore.component.interfaces.ITitleBarLayout;
-import com.tencent.qcloud.tuicore.component.interfaces.IUIKitCallback;
 import com.tencent.qcloud.tuicore.util.ToastUtil;
+import com.tencent.qcloud.tuikit.timcommon.component.TitleBarLayout;
+import com.tencent.qcloud.tuikit.timcommon.component.activities.BaseMinimalistLightActivity;
+import com.tencent.qcloud.tuikit.timcommon.component.interfaces.ITitleBarLayout;
+import com.tencent.qcloud.tuikit.timcommon.component.interfaces.IUIKitCallback;
 import com.tencent.qcloud.tuikit.tuigroup.R;
 import com.tencent.qcloud.tuikit.tuigroup.TUIGroupConstants;
 import com.tencent.qcloud.tuikit.tuigroup.bean.GroupInfo;
 import com.tencent.qcloud.tuikit.tuigroup.presenter.GroupManagerPresenter;
 
-public class GroupNoticeMinimalistActivity extends BaseLightActivity {
-
+public class GroupNoticeMinimalistActivity extends BaseMinimalistLightActivity {
     private static OnGroupNoticeChangedListener changedListener;
 
     private EditText editText;
@@ -42,7 +40,7 @@ public class GroupNoticeMinimalistActivity extends BaseLightActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_group_notice);
+        setContentView(R.layout.group_minimalist_notice);
         editText = findViewById(R.id.group_notice_text);
         titleBarLayout = findViewById(R.id.group_notice_title_bar);
         groupInfo = (GroupInfo) getIntent().getSerializableExtra(TUIGroupConstants.Group.GROUP_INFO);
@@ -50,6 +48,7 @@ public class GroupNoticeMinimalistActivity extends BaseLightActivity {
         if (!TextUtils.isEmpty(groupInfo.getNotice())) {
             editText.setText(groupInfo.getNotice());
         }
+        editText.setEnabled(false);
         titleBarLayout.getLeftGroup().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -70,6 +69,7 @@ public class GroupNoticeMinimalistActivity extends BaseLightActivity {
                     editText.setInputType(EditorInfo.TYPE_CLASS_TEXT);
                     editText.setClickable(true);
                     editText.setFocusable(true);
+                    editText.setEnabled(true);
                     editText.setFocusableInTouchMode(true);
                     showSoftInput();
                     editText.setSelection(editText.getText().toString().length());
@@ -79,6 +79,7 @@ public class GroupNoticeMinimalistActivity extends BaseLightActivity {
                     editText.setInputType(EditorInfo.TYPE_NULL);
                     editText.setClickable(false);
                     editText.setFocusable(false);
+                    editText.setEnabled(false);
                     editText.setFocusableInTouchMode(false);
                     hideSoftInput();
                     setGroupNotice(editText.getText().toString());
@@ -134,7 +135,7 @@ public class GroupNoticeMinimalistActivity extends BaseLightActivity {
     // 兼容有导航键的情况
     private int getNavigateBarHeight() {
         DisplayMetrics metrics = new DisplayMetrics();
-        WindowManager windowManager  = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
+        WindowManager windowManager = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
         windowManager.getDefaultDisplay().getMetrics(metrics);
         int usableHeight = metrics.heightPixels;
         windowManager.getDefaultDisplay().getRealMetrics(metrics);

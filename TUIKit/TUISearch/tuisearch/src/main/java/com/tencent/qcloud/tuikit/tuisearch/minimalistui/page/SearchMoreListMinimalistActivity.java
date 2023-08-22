@@ -14,33 +14,31 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
-import com.tencent.qcloud.tuicore.component.activities.BaseLightActivity;
-import com.tencent.qcloud.tuicore.component.interfaces.IUIKitCallback;
+import com.tencent.qcloud.tuikit.timcommon.component.activities.BaseMinimalistLightActivity;
+import com.tencent.qcloud.tuikit.timcommon.component.interfaces.IUIKitCallback;
 import com.tencent.qcloud.tuikit.tuisearch.R;
 import com.tencent.qcloud.tuikit.tuisearch.TUISearchConstants;
 import com.tencent.qcloud.tuikit.tuisearch.bean.ChatInfo;
 import com.tencent.qcloud.tuikit.tuisearch.bean.SearchDataBean;
 import com.tencent.qcloud.tuikit.tuisearch.minimalistui.util.MinimalistSearchUtils;
-import com.tencent.qcloud.tuikit.tuisearch.minimalistui.view.PageRecycleView;
-import com.tencent.qcloud.tuikit.tuisearch.minimalistui.view.SearchResultAdapter;
+import com.tencent.qcloud.tuikit.tuisearch.minimalistui.widget.PageRecycleView;
+import com.tencent.qcloud.tuikit.tuisearch.minimalistui.widget.SearchResultAdapter;
 import com.tencent.qcloud.tuikit.tuisearch.model.SearchDataProvider;
 import com.tencent.qcloud.tuikit.tuisearch.presenter.SearchMainPresenter;
 import com.tencent.qcloud.tuikit.tuisearch.util.TUISearchLog;
-
 import java.util.ArrayList;
 import java.util.List;
 
-public class SearchMoreListMinimalistActivity extends BaseLightActivity {
+public class SearchMoreListMinimalistActivity extends BaseMinimalistLightActivity {
     private static final String TAG = SearchMoreListMinimalistActivity.class.getSimpleName();
 
     private EditText mEdtSearch;
 
     private ImageView mImgvDelete;
     private TextView mCancleView;
+    private View searchBackButton;
 
     private RecyclerView mFriendRcSearch;
     private RecyclerView mGroupRcSearch;
@@ -54,15 +52,17 @@ public class SearchMoreListMinimalistActivity extends BaseLightActivity {
     private RelativeLayout mGroupLayout;
     private RelativeLayout mConversationLayout;
 
-    private RelativeLayout mMoreContactLayout;
-    private RelativeLayout mMoreGroupLayout;
-    private RelativeLayout mMoreConversationLayout;
+    private View mMoreContactButton;
+    private View mMoreGroupButton;
+    private View mMoreConversationButton;
+    private View notFoundArea;
 
     private int mViewType = -1;
     private String mKeyWords;
     private int pageIndex = 0;
 
     private SearchMainPresenter presenter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -70,7 +70,7 @@ public class SearchMoreListMinimalistActivity extends BaseLightActivity {
         init();
     }
 
-    private void init(){
+    private void init() {
         initView();
 
         if (mContactRcSearchAdapter == null) {
@@ -96,7 +96,7 @@ public class SearchMoreListMinimalistActivity extends BaseLightActivity {
             mKeyWords = intent.getStringExtra(TUISearchConstants.SEARCH_KEY_WORDS);
             pageIndex = 0;
 
-            //also ok
+            // also ok
             initData(mKeyWords);
 
             mEdtSearch.setText(mKeyWords);
@@ -104,6 +104,40 @@ public class SearchMoreListMinimalistActivity extends BaseLightActivity {
         }
 
         setListener();
+    }
+
+    private void initView() {
+        mEdtSearch = (EditText) findViewById(R.id.edt_search);
+        mImgvDelete = (ImageView) findViewById(R.id.imgv_delete);
+        searchBackButton = (ImageView) findViewById(R.id.search_back_icon);
+        mFriendRcSearch = (RecyclerView) findViewById(R.id.friend_rc_search);
+        mGroupRcSearch = (RecyclerView) findViewById(R.id.group_rc_search);
+        mConversationRcSearch = (PageRecycleView) findViewById(R.id.conversation_rc_search);
+        mCancleView = (TextView) findViewById(R.id.cancel_button);
+        mFriendRcSearch.setLayoutManager(new LinearLayoutManager(this));
+        mGroupRcSearch.setLayoutManager(new LinearLayoutManager(this));
+        mConversationRcSearch.setLayoutManager(new LinearLayoutManager(this));
+        mFriendRcSearch.setNestedScrollingEnabled(false);
+        mGroupRcSearch.setNestedScrollingEnabled(false);
+        mConversationRcSearch.setNestedScrollingEnabled(true);
+        mContactLayout = (RelativeLayout) findViewById(R.id.contact_layout);
+        mMoreContactButton = findViewById(R.id.more_contact_button);
+        mGroupLayout = (RelativeLayout) findViewById(R.id.group_layout);
+        mMoreGroupButton = findViewById(R.id.more_group_button);
+        mConversationLayout = findViewById(R.id.conversation_layout);
+        mMoreConversationButton = findViewById(R.id.more_conversation_button);
+        notFoundArea = findViewById(R.id.not_found_area);
+
+        searchBackButton.setVisibility(View.VISIBLE);
+        searchBackButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onBackPressed();
+            }
+        });
+        mMoreContactButton.setVisibility(View.GONE);
+        mMoreConversationButton.setVisibility(View.GONE);
+        mMoreGroupButton.setVisibility(View.GONE);
     }
 
     private void initPresenter() {
@@ -116,14 +150,10 @@ public class SearchMoreListMinimalistActivity extends BaseLightActivity {
     private void setListener() {
         mEdtSearch.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-            }
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
 
             @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-            }
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
 
             @Override
             public void afterTextChanged(Editable editable) {
@@ -147,10 +177,10 @@ public class SearchMoreListMinimalistActivity extends BaseLightActivity {
         });
 
         if (mContactRcSearchAdapter != null) {
-            mContactRcSearchAdapter.setOnItemClickListener(new SearchResultAdapter.onItemClickListener() {
+            mContactRcSearchAdapter.setOnItemClickListener(new SearchResultAdapter.OnItemClickListener() {
                 @Override
                 public void onClick(View view, int pos) {
-                   List<SearchDataBean> searchDataBeans = mContactRcSearchAdapter.getDataSource();
+                    List<SearchDataBean> searchDataBeans = mContactRcSearchAdapter.getDataSource();
                     if (searchDataBeans != null && pos < searchDataBeans.size()) {
                         SearchDataBean searchDataBean = searchDataBeans.get(pos);
                         ChatInfo chatInfo = new ChatInfo();
@@ -164,13 +194,12 @@ public class SearchMoreListMinimalistActivity extends BaseLightActivity {
                         }
                         chatInfo.setChatName(chatName);
                         MinimalistSearchUtils.startChatActivity(chatInfo);
-
                     }
                 }
             });
         }
         if (mGroupRcSearchAdapter != null) {
-            mGroupRcSearchAdapter.setOnItemClickListener(new SearchResultAdapter.onItemClickListener() {
+            mGroupRcSearchAdapter.setOnItemClickListener(new SearchResultAdapter.OnItemClickListener() {
                 @Override
                 public void onClick(View view, int pos) {
                     List<SearchDataBean> searchDataBeans = mGroupRcSearchAdapter.getDataSource();
@@ -193,10 +222,10 @@ public class SearchMoreListMinimalistActivity extends BaseLightActivity {
             });
         }
         if (mConversationRcSearchAdapter != null) {
-            mConversationRcSearchAdapter.setOnItemClickListener(new SearchResultAdapter.onItemClickListener() {
+            mConversationRcSearchAdapter.setOnItemClickListener(new SearchResultAdapter.OnItemClickListener() {
                 @Override
                 public void onClick(View view, int pos) {
-                    if (mConversationRcSearchAdapter == null){
+                    if (mConversationRcSearchAdapter == null) {
                         return;
                     }
                     List<SearchDataBean> searchDataBeans = mConversationRcSearchAdapter.getDataSource();
@@ -213,9 +242,9 @@ public class SearchMoreListMinimalistActivity extends BaseLightActivity {
             mConversationRcSearch.setLoadMoreMessageHandler(new PageRecycleView.OnLoadMoreHandler() {
                 @Override
                 public void loadMore() {
-                    final List<String> keywordList = new ArrayList<String>() {{
-                        add(mKeyWords);
-                    }};
+                    final List<String> keywordList = new ArrayList<String>() {
+                        { add(mKeyWords); }
+                    };
                     presenter.searchConversation(keywordList, ++pageIndex, new IUIKitCallback<List<SearchDataBean>>() {
                         @Override
                         public void onSuccess(List<SearchDataBean> data) {
@@ -223,7 +252,7 @@ public class SearchMoreListMinimalistActivity extends BaseLightActivity {
                                 mConversationLayout.setVisibility(View.VISIBLE);
                             } else {
                                 mConversationLayout.setVisibility(View.GONE);
-                                mMoreConversationLayout.setVisibility(View.GONE);
+                                mMoreConversationButton.setVisibility(View.GONE);
                             }
                             mConversationRcSearchAdapter.onIsShowAllChanged(true);
                         }
@@ -231,7 +260,7 @@ public class SearchMoreListMinimalistActivity extends BaseLightActivity {
                         @Override
                         public void onError(String module, int errCode, String errMsg) {
                             mConversationLayout.setVisibility(View.GONE);
-                            mMoreConversationLayout.setVisibility(View.GONE);
+                            mMoreConversationButton.setVisibility(View.GONE);
                         }
                     });
                 }
@@ -245,8 +274,9 @@ public class SearchMoreListMinimalistActivity extends BaseLightActivity {
                     }
 
                     int totalCount = mConversationRcSearchAdapter.getTotalCount();
-                    int totalPage = (totalCount % SearchDataProvider.CONVERSATION_MESSAGE_PAGE_SIZE == 0) ?
-                            (totalCount / SearchDataProvider.CONVERSATION_MESSAGE_PAGE_SIZE) : (totalCount / SearchDataProvider.CONVERSATION_MESSAGE_PAGE_SIZE + 1);
+                    int totalPage = (totalCount % SearchDataProvider.CONVERSATION_MESSAGE_PAGE_SIZE == 0)
+                        ? (totalCount / SearchDataProvider.CONVERSATION_MESSAGE_PAGE_SIZE)
+                        : (totalCount / SearchDataProvider.CONVERSATION_MESSAGE_PAGE_SIZE + 1);
                     if (pageIndex + 1 < totalPage) {
                         return false;
                     }
@@ -279,20 +309,29 @@ public class SearchMoreListMinimalistActivity extends BaseLightActivity {
         }
     }
 
+    private void invalidNotFoundInfo() {
+        if (mContactLayout.getVisibility() == View.GONE && mGroupLayout.getVisibility() == View.GONE && mConversationLayout.getVisibility() == View.GONE) {
+            notFoundArea.setVisibility(View.VISIBLE);
+        } else {
+            notFoundArea.setVisibility(View.GONE);
+        }
+    }
+
     private void initData(final String keyWords) {
-        if (keyWords == null || TextUtils.isEmpty(keyWords)){
+        if (keyWords == null || TextUtils.isEmpty(keyWords)) {
             mContactLayout.setVisibility(View.GONE);
             mGroupLayout.setVisibility(View.GONE);
             mConversationLayout.setVisibility(View.GONE);
+            notFoundArea.setVisibility(View.GONE);
             return;
         }
 
-        final List<String> keywordList = new ArrayList<String>() {{
-            add(keyWords);
-        }};
+        final List<String> keywordList = new ArrayList<String>() {
+            { add(keyWords); }
+        };
 
         if (mViewType == TUISearchConstants.CONTACT_TYPE) {
-            presenter.searchContact(keywordList,new IUIKitCallback<List<SearchDataBean>>() {
+            presenter.searchContact(keywordList, new IUIKitCallback<List<SearchDataBean>>() {
                 @Override
                 public void onSuccess(List<SearchDataBean> searchDataBeans) {
                     if (searchDataBeans.isEmpty()) {
@@ -301,29 +340,32 @@ public class SearchMoreListMinimalistActivity extends BaseLightActivity {
                         mContactLayout.setVisibility(View.VISIBLE);
                     }
                     mContactRcSearchAdapter.onIsShowAllChanged(true);
+                    invalidNotFoundInfo();
                 }
 
                 @Override
                 public void onError(String module, int code, String desc) {
                     TUISearchLog.d(TAG, "SearchContact onError code = " + code + ", desc = " + desc);
+                    invalidNotFoundInfo();
                 }
             });
         } else if (mViewType == TUISearchConstants.GROUP_TYPE) {
             presenter.searchGroup(keywordList, new IUIKitCallback<List<SearchDataBean>>() {
                 @Override
                 public void onSuccess(List<SearchDataBean> searchDataBeans) {
-
                     if (searchDataBeans.size() > 0) {
                         mGroupLayout.setVisibility(View.VISIBLE);
                     } else {
                         mGroupLayout.setVisibility(View.GONE);
                     }
                     mGroupRcSearchAdapter.onIsShowAllChanged(true);
+                    invalidNotFoundInfo();
                 }
 
                 @Override
                 public void onError(String module, int code, String desc) {
                     TUISearchLog.d(TAG, "SearchContact onError code = " + code + ", desc = " + desc);
+                    invalidNotFoundInfo();
                 }
             });
         } else if (mViewType == TUISearchConstants.CONVERSATION_TYPE) {
@@ -333,15 +375,17 @@ public class SearchMoreListMinimalistActivity extends BaseLightActivity {
                         mConversationLayout.setVisibility(View.VISIBLE);
                     } else {
                         mConversationLayout.setVisibility(View.GONE);
-                        mMoreConversationLayout.setVisibility(View.GONE);
+                        mMoreConversationButton.setVisibility(View.GONE);
                     }
                     mConversationRcSearchAdapter.onIsShowAllChanged(true);
+                    invalidNotFoundInfo();
                 }
 
                 @Override
                 public void onError(String module, int errCode, String errMsg) {
                     mConversationLayout.setVisibility(View.GONE);
-                    mMoreConversationLayout.setVisibility(View.GONE);
+                    mMoreConversationButton.setVisibility(View.GONE);
+                    invalidNotFoundInfo();
                 }
             });
         } else {
@@ -349,30 +393,6 @@ public class SearchMoreListMinimalistActivity extends BaseLightActivity {
         }
     }
 
-    private void initView() {
-        mEdtSearch = (EditText) findViewById(R.id.edt_search);
-        mImgvDelete = (ImageView) findViewById(R.id.imgv_delete);
-        mFriendRcSearch = (RecyclerView) findViewById(R.id.friend_rc_search);
-        mGroupRcSearch = (RecyclerView) findViewById(R.id.group_rc_search);
-        mConversationRcSearch = (PageRecycleView) findViewById(R.id.conversation_rc_search);
-        mCancleView = (TextView) findViewById(R.id.cancel_button);
-        mFriendRcSearch.setLayoutManager(new LinearLayoutManager(this));
-        mGroupRcSearch.setLayoutManager(new LinearLayoutManager(this));
-        mConversationRcSearch.setLayoutManager(new LinearLayoutManager(this));
-        mFriendRcSearch.setNestedScrollingEnabled(false);
-        mGroupRcSearch.setNestedScrollingEnabled(false);
-        mConversationRcSearch.setNestedScrollingEnabled(true);
-        mContactLayout = (RelativeLayout) findViewById(R.id.contact_layout);
-        mMoreContactLayout = (RelativeLayout) findViewById(R.id.more_contact_layout);
-        mGroupLayout = (RelativeLayout) findViewById(R.id.group_layout);
-        mMoreGroupLayout = (RelativeLayout) findViewById(R.id.more_group_layout);
-        mConversationLayout = (RelativeLayout) findViewById(R.id.conversation_layout);
-        mMoreConversationLayout = (RelativeLayout) findViewById(R.id.more_conversation_layout);
-
-        mMoreContactLayout.setVisibility(View.GONE);
-        mMoreConversationLayout.setVisibility(View.GONE);
-        mMoreGroupLayout.setVisibility(View.GONE);
-    }
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
         if (ev.getAction() == MotionEvent.ACTION_DOWN) {
@@ -388,8 +408,10 @@ public class SearchMoreListMinimalistActivity extends BaseLightActivity {
         if (v != null && (v instanceof EditText)) {
             int[] l = {0, 0};
             v.getLocationInWindow(l);
-            int left = l[0], top = l[1], bottom = top + v.getHeight(), right = left
-                    + v.getWidth();
+            int left = l[0];
+            int top = l[1];
+            int bottom = top + v.getHeight();
+            int right = left + v.getWidth();
             if (event.getX() > left && event.getX() < right && event.getY() > top && event.getY() < bottom) {
                 return false;
             } else {

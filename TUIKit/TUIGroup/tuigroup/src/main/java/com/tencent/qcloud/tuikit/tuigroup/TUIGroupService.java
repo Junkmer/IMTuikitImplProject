@@ -1,7 +1,6 @@
 package com.tencent.qcloud.tuikit.tuigroup;
 
 import android.content.Context;
-
 import com.tencent.imsdk.v2.V2TIMGroupChangeInfo;
 import com.tencent.imsdk.v2.V2TIMGroupListener;
 import com.tencent.imsdk.v2.V2TIMGroupMemberChangeInfo;
@@ -13,7 +12,6 @@ import com.tencent.qcloud.tuicore.TUICore;
 import com.tencent.qcloud.tuicore.TUILogin;
 import com.tencent.qcloud.tuikit.tuigroup.interfaces.GroupEventListener;
 import com.tencent.qcloud.tuikit.tuigroup.util.TUIGroupUtils;
-
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -43,7 +41,6 @@ public class TUIGroupService extends ServiceInitializer implements ITUIGroupServ
         return null;
     }
 
-
     private void initIMListener() {
         V2TIMManager.getInstance().addGroupListener(new V2TIMGroupListener() {
             @Override
@@ -59,11 +56,19 @@ public class TUIGroupService extends ServiceInitializer implements ITUIGroupServ
                 if (userIds.contains(TUILogin.getLoginUser())) {
                     TUIGroupUtils.toastGroupEvent(TUIGroupUtils.GROUP_EVENT_TIP_JOINED, groupID);
                 }
+                List<GroupEventListener> groupEventListeners = getGroupEventListenerList();
+                for (GroupEventListener groupEventListener : groupEventListeners) {
+                    groupEventListener.onGroupMemberCountChanged(groupID);
+                }
             }
 
             @Override
             public void onMemberLeave(String groupID, V2TIMGroupMemberInfo member) {
                 super.onMemberLeave(groupID, member);
+                List<GroupEventListener> groupEventListeners = getGroupEventListenerList();
+                for (GroupEventListener groupEventListener : groupEventListeners) {
+                    groupEventListener.onGroupMemberCountChanged(groupID);
+                }
             }
 
             @Override
@@ -79,6 +84,10 @@ public class TUIGroupService extends ServiceInitializer implements ITUIGroupServ
                 if (userIds.contains(TUILogin.getLoginUser())) {
                     TUIGroupUtils.toastGroupEvent(TUIGroupUtils.GROUP_EVENT_TIP_INVITED, groupID);
                 }
+                List<GroupEventListener> groupEventListeners = getGroupEventListenerList();
+                for (GroupEventListener groupEventListener : groupEventListeners) {
+                    groupEventListener.onGroupMemberCountChanged(groupID);
+                }
             }
 
             @Override
@@ -93,6 +102,10 @@ public class TUIGroupService extends ServiceInitializer implements ITUIGroupServ
                 TUICore.notifyEvent(TUIConstants.TUIGroup.EVENT_GROUP, TUIConstants.TUIGroup.EVENT_SUB_KEY_MEMBER_KICKED_GROUP, param);
                 if (userIds.contains(TUILogin.getLoginUser())) {
                     TUIGroupUtils.toastGroupEvent(TUIGroupUtils.GROUP_EVENT_TIP_KICKED, groupID);
+                }
+                List<GroupEventListener> groupEventListeners = getGroupEventListenerList();
+                for (GroupEventListener groupEventListener : groupEventListeners) {
+                    groupEventListener.onGroupMemberCountChanged(groupID);
                 }
             }
 
@@ -112,7 +125,6 @@ public class TUIGroupService extends ServiceInitializer implements ITUIGroupServ
                 param.put(TUIConstants.TUIGroup.GROUP_ID, groupID);
                 TUICore.notifyEvent(TUIConstants.TUIGroup.EVENT_GROUP, TUIConstants.TUIGroup.EVENT_SUB_KEY_GROUP_DISMISS, param);
                 TUIGroupUtils.toastGroupEvent(TUIGroupUtils.GROUP_EVENT_TIP_DISBANDED, groupID);
-
             }
 
             @Override
@@ -151,12 +163,14 @@ public class TUIGroupService extends ServiceInitializer implements ITUIGroupServ
 
             @Override
             public void onReceiveJoinApplication(String groupID, V2TIMGroupMemberInfo member, String opReason) {
-                super.onReceiveJoinApplication(groupID, member, opReason);
+                TUICore.notifyEvent(TUIConstants.TUIGroup.Event.GroupApplication.KEY_GROUP_APPLICATION,
+                    TUIConstants.TUIGroup.Event.GroupApplication.SUB_KEY_GROUP_APPLICATION_NUM_CHANGED, null);
             }
 
             @Override
             public void onApplicationProcessed(String groupID, V2TIMGroupMemberInfo opUser, boolean isAgreeJoin, String opReason) {
-                super.onApplicationProcessed(groupID, opUser, isAgreeJoin, opReason);
+                TUICore.notifyEvent(TUIConstants.TUIGroup.Event.GroupApplication.KEY_GROUP_APPLICATION,
+                    TUIConstants.TUIGroup.Event.GroupApplication.SUB_KEY_GROUP_APPLICATION_NUM_CHANGED, null);
             }
 
             @Override
@@ -203,7 +217,7 @@ public class TUIGroupService extends ServiceInitializer implements ITUIGroupServ
     public List<GroupEventListener> getGroupEventListenerList() {
         List<GroupEventListener> listeners = new ArrayList<>();
         Iterator<WeakReference<GroupEventListener>> iterator = groupEventListenerList.listIterator();
-        while(iterator.hasNext()) {
+        while (iterator.hasNext()) {
             WeakReference<GroupEventListener> listenerWeakReference = iterator.next();
             GroupEventListener listener = listenerWeakReference.get();
             if (listener == null) {

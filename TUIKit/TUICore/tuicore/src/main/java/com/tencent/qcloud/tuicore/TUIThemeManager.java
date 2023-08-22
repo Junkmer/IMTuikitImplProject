@@ -11,15 +11,11 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.util.TypedValue;
 import android.webkit.WebView;
-
-import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
 import com.tencent.qcloud.tuicore.util.SPUtils;
 import com.tencent.qcloud.tuicore.util.TUIBuild;
-import com.tencent.qcloud.tuicore.util.TUIUtil;
-
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -81,6 +77,7 @@ public class TUIThemeManager {
                 ((Application) appContext).registerActivityLifecycleCallbacks(new ThemeAndLanguageCallback());
             }
 
+            notifySetLanguageEvent();
             Locale defaultLocale = getLocale(appContext);
             SPUtils spUtils = SPUtils.getInstance(SP_THEME_AND_LANGUAGE_NAME);
             currentLanguage = spUtils.getString(SP_KEY_LANGUAGE, defaultLocale.getLanguage());
@@ -93,14 +90,46 @@ public class TUIThemeManager {
         applyTheme(appContext);
     }
 
+    private static String currentProcessName = "";
+
+    public static String getProcessName() {
+        if (!TextUtils.isEmpty(currentProcessName)) {
+            return currentProcessName;
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            currentProcessName = Application.getProcessName();
+            return currentProcessName;
+        }
+
+        try {
+            final Method declaredMethod = Class.forName("android.app.ActivityThread", false, Application.class.getClassLoader())
+                                              .getDeclaredMethod("currentProcessName", (Class<?>[]) new Class[0]);
+            declaredMethod.setAccessible(true);
+            final Object invoke = declaredMethod.invoke(null, new Object[0]);
+            if (invoke instanceof String) {
+                currentProcessName = (String) invoke;
+            }
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
+
+        return currentProcessName;
+    }
+
+    private void notifySetLanguageEvent() {
+        TUICore.notifyEvent(TUIConstants.TUICore.LANGUAGE_EVENT, TUIConstants.TUICore.LANGUAGE_EVENT_SUB_KEY, null);
+    }
+
     /**
      * Solve the problem that WebView on Android 7 and above causes failure to switch languages.
      * Solve the problem of using WebView Crash for multiple processes above Android 9.
      */
     public static void setWebViewLanguage(Context appContext) {
         try {
+            Log.i(TAG, "setWebViewLanguage");
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                WebView.setDataDirectorySuffix(TUIUtil.getProcessName());
+                WebView.setDataDirectorySuffix(getProcessName());
             }
             new WebView(appContext).destroy();
         } catch (Throwable throwable) {
@@ -137,6 +166,7 @@ public class TUIThemeManager {
     public static void addLivelyTheme(int resId) {
         addTheme(THEME_LIVELY, resId);
     }
+
     public static void addSeriousTheme(int resId) {
         addTheme(THEME_SERIOUS, resId);
     }
@@ -203,8 +233,7 @@ public class TUIThemeManager {
 
         if (Build.VERSION.SDK_INT >= 25) {
             context = context.createConfigurationContext(configuration);
-            context.getResources().updateConfiguration(configuration,
-                resources.getDisplayMetrics());
+            context.getResources().updateConfiguration(configuration, resources.getDisplayMetrics());
         }
     }
 
@@ -254,7 +283,7 @@ public class TUIThemeManager {
 
     /**
      * Get resources for skinning
-     * 
+     *
      * @param context   context
      * @param attrId    custom attribute
      * @return resources for skinning
@@ -269,42 +298,29 @@ public class TUIThemeManager {
     }
 
     static class ThemeAndLanguageCallback implements Application.ActivityLifecycleCallbacks {
-
         @Override
         public void onActivityCreated(@NonNull Activity activity, @Nullable Bundle savedInstanceState) {
             TUIThemeManager.getInstance().applyTheme(activity);
             TUIThemeManager.getInstance().applyLanguage(activity);
+            TUIThemeManager.getInstance().applyLanguage(activity.getApplicationContext());
         }
 
         @Override
-        public void onActivityStarted(@NonNull Activity activity) {
-
-        }
+        public void onActivityStarted(@NonNull Activity activity) {}
 
         @Override
-        public void onActivityResumed(@NonNull Activity activity) {
-
-        }
+        public void onActivityResumed(@NonNull Activity activity) {}
 
         @Override
-        public void onActivityPaused(@NonNull Activity activity) {
-
-        }
+        public void onActivityPaused(@NonNull Activity activity) {}
 
         @Override
-        public void onActivityStopped(@NonNull Activity activity) {
-
-        }
+        public void onActivityStopped(@NonNull Activity activity) {}
 
         @Override
-        public void onActivitySaveInstanceState(@NonNull Activity activity, @NonNull Bundle outState) {
-
-        }
+        public void onActivitySaveInstanceState(@NonNull Activity activity, @NonNull Bundle outState) {}
 
         @Override
-        public void onActivityDestroyed(@NonNull Activity activity) {
-
-        }
+        public void onActivityDestroyed(@NonNull Activity activity) {}
     }
-
 }

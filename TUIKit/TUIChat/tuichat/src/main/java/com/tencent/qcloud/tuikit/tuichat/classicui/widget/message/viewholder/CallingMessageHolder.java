@@ -5,14 +5,14 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.tencent.qcloud.tuikit.timcommon.bean.TUIMessageBean;
 import com.tencent.qcloud.tuikit.tuichat.R;
 import com.tencent.qcloud.tuikit.tuichat.bean.message.CallingMessageBean;
-import com.tencent.qcloud.tuikit.tuichat.bean.message.TUIMessageBean;
 
-public class CallingMessageHolder extends TextMessageHolder{
-
+public class CallingMessageHolder extends TextMessageHolder {
     private TextView msgBodyText;
-    private ImageView mLeftView, mRightView;
+    private ImageView mLeftView;
+    private ImageView mRightView;
     private LinearLayout mCallingLayout;
 
     public CallingMessageHolder(View itemView) {
@@ -44,6 +44,7 @@ public class CallingMessageHolder extends TextMessageHolder{
             } else if (callingMessageBean.getCallType() == CallingMessageBean.ACTION_ID_VIDEO_CALL) {
                 mRightView.setImageResource(R.drawable.ic_self_video_call);
             }
+            unreadAudioText.setVisibility(View.GONE);
         } else {
             mRightView.setVisibility(View.GONE);
             mLeftView.setVisibility(View.VISIBLE);
@@ -52,16 +53,34 @@ public class CallingMessageHolder extends TextMessageHolder{
             } else if (callingMessageBean.getCallType() == CallingMessageBean.ACTION_ID_VIDEO_CALL) {
                 mLeftView.setImageResource(R.drawable.ic_other_video_call);
             }
+            unreadAudioText.setVisibility(callingMessageBean.isShowUnreadPoint() ? View.VISIBLE : View.GONE);
         }
 
-        if (callingMessageBean.getCallType() == CallingMessageBean.ACTION_ID_AUDIO_CALL ||
-                callingMessageBean.getCallType() == CallingMessageBean.ACTION_ID_VIDEO_CALL) {
-            mCallingLayout.setOnClickListener(new View.OnClickListener() {
+        if (callingMessageBean.getCallType() == CallingMessageBean.ACTION_ID_AUDIO_CALL
+            || callingMessageBean.getCallType() == CallingMessageBean.ACTION_ID_VIDEO_CALL) {
+            msgArea.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
-                public void onClick(View view) {
-                    onItemClickListener.onRecallClick(view, position, msg);
+                public boolean onLongClick(View v) {
+                    if (selectableTextHelper != null) {
+                        selectableTextHelper.selectAll();
+                    }
+                    return true;
                 }
             });
+
+            msgArea.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (onItemClickListener != null) {
+                        onItemClickListener.onRecallClick(v, position, msg);
+                    }
+                }
+            });
+
+            if (isForwardMode || isReplyDetailMode) {
+                return;
+            }
+            setSelectableTextHelper(msg, msgBodyText, position, false);
         }
     }
 }

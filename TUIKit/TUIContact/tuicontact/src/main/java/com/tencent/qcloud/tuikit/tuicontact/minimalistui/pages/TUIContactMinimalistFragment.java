@@ -5,10 +5,8 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-
 import androidx.annotation.Nullable;
-
-import com.tencent.qcloud.tuicore.component.fragments.BaseFragment;
+import com.tencent.qcloud.tuikit.timcommon.component.fragments.BaseFragment;
 import com.tencent.qcloud.tuikit.tuicontact.R;
 import com.tencent.qcloud.tuikit.tuicontact.TUIContactConstants;
 import com.tencent.qcloud.tuikit.tuicontact.TUIContactService;
@@ -19,11 +17,11 @@ import com.tencent.qcloud.tuikit.tuicontact.presenter.ContactPresenter;
 import com.tencent.qcloud.tuikit.tuicontact.util.TUIContactLog;
 
 public class TUIContactMinimalistFragment extends BaseFragment {
-
     private static final String TAG = TUIContactMinimalistFragment.class.getSimpleName();
     private ContactLayout mContactLayout;
 
     private ContactPresenter presenter;
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
@@ -41,11 +39,18 @@ public class TUIContactMinimalistFragment extends BaseFragment {
         mContactLayout.setPresenter(presenter);
         mContactLayout.initDefault();
 
+        mContactLayout.setOnClickListener(new OnClickListener() {
+            @Override
+            public void finishActivity() {
+                getActivity().finish();
+            }
+        });
+
         mContactLayout.getContactListView().setOnItemClickListener(new ContactListView.OnItemClickListener() {
             @Override
             public void onItemClick(int position, ContactItemBean contact) {
                 if (position == 0) {
-                    Intent intent = new Intent(TUIContactService.getAppContext(), NewFriendMinimalistActivity.class);
+                    Intent intent = new Intent(TUIContactService.getAppContext(), NewFriendApplicationMinimalistActivity.class);
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     TUIContactService.getAppContext().startActivity(intent);
                 } else if (position == 1) {
@@ -70,5 +75,10 @@ public class TUIContactMinimalistFragment extends BaseFragment {
     public void onResume() {
         super.onResume();
         TUIContactLog.i(TAG, "onResume");
+        mContactLayout.initUI();
+    }
+
+    public interface OnClickListener {
+        void finishActivity();
     }
 }

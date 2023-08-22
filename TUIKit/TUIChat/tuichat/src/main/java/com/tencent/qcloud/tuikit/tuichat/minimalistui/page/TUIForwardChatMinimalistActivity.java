@@ -3,24 +3,21 @@ package com.tencent.qcloud.tuikit.tuichat.minimalistui.page;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-
 import androidx.recyclerview.widget.LinearLayoutManager;
-
-import com.tencent.qcloud.tuicore.component.CustomLinearLayoutManager;
-import com.tencent.qcloud.tuicore.component.activities.BaseMinimalistLightActivity;
+import com.tencent.qcloud.tuikit.timcommon.bean.TUIMessageBean;
+import com.tencent.qcloud.tuikit.timcommon.component.CustomLinearLayoutManager;
+import com.tencent.qcloud.tuikit.timcommon.component.activities.BaseMinimalistLightActivity;
+import com.tencent.qcloud.tuikit.timcommon.interfaces.OnItemClickListener;
 import com.tencent.qcloud.tuikit.tuichat.R;
 import com.tencent.qcloud.tuikit.tuichat.TUIChatConstants;
 import com.tencent.qcloud.tuikit.tuichat.bean.ChatInfo;
 import com.tencent.qcloud.tuikit.tuichat.bean.message.MergeMessageBean;
-import com.tencent.qcloud.tuikit.tuichat.bean.message.TUIMessageBean;
-import com.tencent.qcloud.tuikit.tuichat.minimalistui.interfaces.OnItemClickListener;
 import com.tencent.qcloud.tuikit.tuichat.minimalistui.widget.message.MessageAdapter;
 import com.tencent.qcloud.tuikit.tuichat.minimalistui.widget.message.MessageRecyclerView;
 import com.tencent.qcloud.tuikit.tuichat.presenter.ForwardPresenter;
 import com.tencent.qcloud.tuikit.tuichat.util.TUIChatLog;
 
 public class TUIForwardChatMinimalistActivity extends BaseMinimalistLightActivity {
-
     private static final String TAG = TUIForwardChatMinimalistActivity.class.getSimpleName();
 
     private MessageRecyclerView mFowardChatMessageRecyclerView;
@@ -56,7 +53,6 @@ public class TUIForwardChatMinimalistActivity extends BaseMinimalistLightActivit
         });
 
         mFowardChatMessageRecyclerView.setOnItemClickListener(new OnItemClickListener() {
-
             @Override
             public void onUserIconClick(View view, int position, TUIMessageBean messageInfo) {
                 if (!(messageInfo instanceof MergeMessageBean)) {
@@ -64,17 +60,26 @@ public class TUIForwardChatMinimalistActivity extends BaseMinimalistLightActivit
                 }
 
                 Intent intent = new Intent(getBaseContext(), TUIForwardChatMinimalistActivity.class);
-                Bundle bundle=new Bundle();
+                Bundle bundle = new Bundle();
                 bundle.putSerializable(TUIChatConstants.FORWARD_MERGE_MESSAGE_KEY, messageInfo);
                 intent.putExtras(bundle);
                 startActivity(intent);
+            }
+
+            @Override
+            public void onMessageClick(View view, int position, TUIMessageBean messageBean) {
+                if (messageBean instanceof MergeMessageBean) {
+                    Intent intent = new Intent(view.getContext(), TUIForwardChatMinimalistActivity.class);
+                    intent.putExtra(TUIChatConstants.FORWARD_MERGE_MESSAGE_KEY, messageBean);
+                    startActivity(intent);
+                }
             }
         });
 
         init();
     }
 
-    private void init(){
+    private void init() {
         Intent intent = getIntent();
         if (intent != null) {
             mMessageInfo = (MergeMessageBean) intent.getSerializableExtra(TUIChatConstants.FORWARD_MERGE_MESSAGE_KEY);
@@ -87,5 +92,4 @@ public class TUIForwardChatMinimalistActivity extends BaseMinimalistLightActivit
             presenter.downloadMergerMessage(mMessageInfo);
         }
     }
-
 }
